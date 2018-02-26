@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="style.css">
+    <title>Test</title>
+</head>
+<body>
+    <div class="tab">
+        <button id="addFilesTab" class="tablinks active">Add Files</button>
+        <button id="drawParallelCoordinatesTab" class="tablinks">Parallel Coordinates</button>
+        <button id="drawLineChartScatterPlotTab" class="tablinks">LineChart & ScatterPlot</button>
+    </div>
+    <div id="loaderDiv">
+        <div class="Aligner-item Aligner-item--top">
+            <button id="hideLoading">Hide Loading</button>
+        </div>
+        <div class="Aligner-item loader"></div>
+        <div class="Aligner-item Aligner-item--bottom"></div>
+    </div>
+    <!--ADD FILES-->
+    <div id="addFiles" class="tabcontent">
+        <div id="container">
+            <div id="leftPane">
+                <input id="import" type="file" webkitdirectory directory multiple/>
+                <table id="fileList">
+                    <thead>
+                    <tr>
+                        <td>Name</td>
+                        <td>Type</td>
+                        <td>Size</td>
+                        <td>Last modified date</td>
+                    </tr>
+                    </thead>
+                </table>
+            </div>
+            <div id="rightPane">
+                <div class="fixedDiv">
+                    <button id="addSelectedFiles">Add Selected Files</button>
+                    <div style="height: 300px">
+                        Selected Files :
+                        <ul id="selectedFiles">
+                        </ul>
+                    </div>
+                    <div style="height: 300px">
+                        Added Files :
+                        <ul id="addedFiles">
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="drawParallelCoordinatesPlot" class="tabcontent">
+        <div id="mySidenavPC" class="sidenav">
+            <a href="javascript:void(0)" class="closebtn" id="closeNavPC">&times;</a>
+            <a href="#">Files</a>
+            <select multiple id="selectFilePC"></select>
+            <a href="#">Columns selection</a>
+            <select multiple id="selectColumnsPC"></select>
+            <button id="displayPC">Display</button>
+        </div>
+
+        <button id="openSideNavPC">Options</button>
+        <button id="drawFromSelection">Draw from selection</button>
+        <button id="resetSelection">Reset selection</button>
+        <div id="pcContainer"></div>
+    </div>
+
+    <div id="drawLineChartScatterPlot" class="tabcontent">
+        <div id="mySidenavLCSP" class="sidenav">
+            <a href="javascript:void(0)" class="closebtn" id="closeNavLCSP">&times;</a>
+            <a href="#">Files</a>
+            <select id="selectFileLCSP"></select>
+            <a href="#">Columns selection</a>
+            <select id="xAxisLCSP"></select>
+            <select id="yAxisLCSP"></select>
+        </div>
+
+        <button id="openSideNavLCSP">Options</button>
+
+        <div id="lscpContainer">
+        </div>
+    </div>
+    <!--<script src="//d3js.org/d3.v4.min.js"></script>-->
+    <script src="d3.min.js"></script>
+    <script src="render-queue.js"></script>
+    <script type="module" src="modules/defaultOptions.js"></script>
+    <script type="module" src="modules/LineChartScatterPlot.js"></script>
+    <script type="module" src="modules/ParallelCoords.js"></script>
+    <script type="module" src="main.js"></script>
+</body>
+</html>

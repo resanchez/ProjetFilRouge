@@ -27,6 +27,7 @@ dtypes = {
     "tot 1": np.float64,
 }
 
+
 def add_selected_files(data, args):
     global df
 
@@ -39,6 +40,9 @@ def add_selected_files(data, args):
         cols = d.columns
         cols = cols.map(lambda x: x.replace(' ', '_').replace('.', '') if isinstance(x, (bytes, str)) else x)
         d.columns = cols
+        print(args, len(args))
+        if args:
+            d['group'] = args[0]
         frames = [df, d]
         df = pd.concat(frames).drop_duplicates().reset_index(drop=True)
 
@@ -50,7 +54,6 @@ def add_selected_files(data, args):
         variables["columns"] = []
 
     return variables
-
 
 
 def get_pc_data(data, args):
@@ -67,15 +70,15 @@ def get_pc_data(data, args):
             print(key, value)
             # TODO if pas beau
             if not query_string:
-                query_string += key +' < ' + str(value[0]) + ' and ' + key +' >= ' + str(value[1])
+                query_string += key + ' < ' + str(value[0]) + ' and ' + key + ' >= ' + str(value[1])
             else:
-                query_string += ' and ' + key +' < ' + str(value[0]) + ' and ' + key +' >= ' + str(value[1])
+                query_string += ' and ' + key + ' < ' + str(value[0]) + ' and ' + key + ' >= ' + str(value[1])
         # limited = df.loc[(df[list(lims)] == pd.Series(lims)).all(axis=1)]
 
         # print(query_string)
 
         limited = df.query(query_string)
-        #limited = df.loc[df["phase_no"] == '1']
+        # limited = df.loc[df["phase_no"] == '1']
 
         print
 

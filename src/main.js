@@ -137,7 +137,7 @@ function updateUI(data) {
         del.innerHTML = "X";
         li.appendChild(del);
         del.addEventListener("click", function () {
-           sendRequest("deleteFile", f);
+            sendRequest("deleteFile", f);
         });
         addedFilesList.appendChild(li);
 
@@ -156,7 +156,7 @@ function updateUI(data) {
     }
 
     for (let c of state.columns) {
-        if (c !== "date_time" && c !== "idxFile") {
+        if (c !== "date_time" && c !== "idxFile" && c !== "group") {
             let optionX = document.createElement("option");
             optionX.innerHTML = c;
             optionX.value = c;
@@ -215,7 +215,8 @@ function openCity(evt, cityName) {
 // ************************* ADD DATA *************************
 window.addEventListener("load", main);
 
-let listSelectedFiles = [];
+let listSelectedFiles1 = [];
+let listSelectedFiles2 = [];
 let displaySelectedFiles;
 let displayAddedFiles;
 let filesToLi = {};
@@ -261,7 +262,8 @@ function setupListeners() {
     });
 
     addSelectedFiles.addEventListener("click", function (ev) {
-        readAndSendSelectedFiles(listSelectedFiles);
+        readAndSendSelectedFiles(listSelectedFiles1, 1);
+        readAndSendSelectedFiles(listSelectedFiles2, 2);
     });
 }
 
@@ -292,7 +294,7 @@ function setUpOptions() {
 }
 
 
-function readAndSendSelectedFiles(files) {
+function readAndSendSelectedFiles(files, id) {
     let dataAll = [];
     let nbFiles = 0;
     for (let i = 0, len = files.length; i < len; i++) {
@@ -305,7 +307,7 @@ function readAndSendSelectedFiles(files) {
                 d3.csv(e.target.result, function (error, data) {
                     let power = 0;
                     for (let d of data) {
-                        if(d["power"]) {
+                        if (d["power"]) {
                             power = d["power"];
                         } else {
                             d["power"] = power;
@@ -316,7 +318,7 @@ function readAndSendSelectedFiles(files) {
                     dataAll = dataAll.concat(data);
                     nbFiles++;
                     if (nbFiles === files.length) {
-                        sendRequest("addSelectedFiles", JSON.stringify(dataAll));
+                        sendRequest("addSelectedFiles", JSON.stringify(dataAll), id);
                     }
                 });
             };
@@ -325,17 +327,26 @@ function readAndSendSelectedFiles(files) {
     }
 }
 
-function updateSelectedFilesList(file, val) {
+function updateSelectedFilesList(file, val, isShifted) {
     if (val) {
-        listSelectedFiles.push(file);
+        if (isShifted){
+            listSelectedFiles1.push(file);
+        } else {
+            listSelectedFiles2.push(file);
+        }
         let li = document.createElement("li");
-        li.className = "addedFile";
+        li.className = isShifted ? "selectedFile1" : "selectedFile2";
         li.innerHTML = file.name;
         displaySelectedFiles.appendChild(li);
         filesToLi[file.name] = li;
     } else {
-        let idx = listSelectedFiles.indexOf(file);
-        listSelectedFiles.splice(idx, 1);
+        let idx = listSelectedFiles1.indexOf(file);
+        if (idx !== -1) {
+            listSelectedFiles1.splice(idx, 1);
+        } else {
+            let idx = listSelectedFiles2.indexOf(file);
+            listSelectedFiles2.splice(idx, 1);
+        }
         let liToRM = filesToLi[file.name];
         displaySelectedFiles.removeChild(liToRM);
     }
@@ -357,10 +368,22 @@ function fillFileList(files, table) {
 
     for (let file of files) {
         let tri = tr.cloneNode(false);
-        tri.addEventListener("mousedown", function () {
+        tri.addEventListener("mousedown", function (ev) {
+            let isShifted = ev.shiftKey;
+
             if (!tri.classList.contains("trDisabled")) {
                 let toggle = tri.classList.toggle("trActive");
-                updateSelectedFilesList(file, toggle);
+                if (toggle) {
+                    if (isShifted) {
+                        tri.classList.toggle("groupActive1", true);
+                    } else {
+                        tri.classList.toggle("groupActive2", true);
+                    }
+                } else {
+                    tri.classList.toggle("groupActive1", false);
+                    tri.classList.toggle("groupActive2", false);
+                }
+                updateSelectedFilesList(file, toggle, isShifted);
             }
         });
         let tdName = td.cloneNode(false);
@@ -390,7 +413,7 @@ let resetSelection = document.getElementById("resetSelection");
 
 resetSelection.addEventListener("click", askPCData);
 
-drawFromSelection.addEventListener("click", function() {
+drawFromSelection.addEventListener("click", function () {
     let selectedFiles = getSelectedValues(selectFilePC);
     let selectedColumns = getSelectedValues(selectColumnsPC);
 

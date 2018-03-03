@@ -11,9 +11,12 @@ window.addEventListener("load", function () {
     // mySocket = new WebSocket("ws://localhost:9000");
 
     // Find existing selected files
-    mySocket.onopen = () => sendRequest("addSelectedFiles", JSON.stringify([]));
+    mySocket.onopen = () => {
+        sendRequest("addSelectedFiles", JSON.stringify([]), 0);
+        sendRequest("addSelectedFiles", JSON.stringify([]), 1);
+    };
     // Ecoute pour les messages arrivant
-    mySocket.onmessage = function (event) {
+    mySocket.onmessage = (event) => {
         hideLoading();
         let res = JSON.parse(event.data);
         console.log(res);
@@ -28,7 +31,7 @@ window.addEventListener("load", function () {
         } else if (res.fct === "getColumnsLCSP") {
             createSelectAxis(res.data);
         } else if (res.fct === "getPCData") {
-            fillParallelCoordinates(res.data.pcData, res.data.pcColumns);
+            fillParallelCoordinates(res.data.pcData, res.data.group, res.data.pcColumns);
         }
     };
 });
@@ -47,12 +50,21 @@ function hideLoading() {
 btnHideLoading.addEventListener("click", hideLoading);
 
 let state = {
-    files: [],
-    columns: []
+    0: {
+        files: [],
+        columns: []
+    },
+    1: {
+        files: [],
+        columns: []
+    }
 };
-let addedFilesList = document.getElementById("addedFiles");
+// let addedFilesList0 = document.getElementById("addedFiles0");
+// let addedFilesList1 = document.getElementById("addedFiles1");
+
 let selectedFilesList = document.getElementById("selectedFiles");
-let selectFilePC = document.getElementById("selectFilePC");
+// let selectFilePC = document.getElementById("selectFilePC0");
+// let selectFilePC = document.getElementById("selectFilePC1");
 let selectColumnsPC = document.getElementById("selectColumnsPC");
 let btnDisplayPC = document.getElementById("displayPC");
 let selectFileLCSP = document.getElementById("selectFileLCSP");
@@ -65,37 +77,39 @@ function getSelectedValues(select) {
 }
 
 btnDisplayPC.addEventListener("click", function (ev) {
-    askPCData();
+    askPCDataAll();
 });
 
 
 // LCSP
 selectFileLCSP.addEventListener("change", function (ev) {
-    sendRequest("getLCSPData", this.value, selectXAxisLCSP.value, selectYAxisLCSP.value);
+    sendRequest("getLCSPData", this.value, 0, selectXAxisLCSP.value, selectYAxisLCSP.value);
 });
 
 selectXAxisLCSP.addEventListener("change", function (ev) {
     let featureX = selectXAxisLCSP.value;
     let featureY = selectYAxisLCSP.value;
     let currentFile = selectFileLCSP.value;
-    sendRequest("getLCSPData", currentFile, featureX, featureY);
+    sendRequest("getLCSPData", currentFile, 0, featureX, featureY);
 });
 
 selectYAxisLCSP.addEventListener("change", function (ev) {
     let featureX = selectXAxisLCSP.value;
     let featureY = selectYAxisLCSP.value;
     let currentFile = selectFileLCSP.value;
-    sendRequest("getLCSPData", currentFile, featureX, featureY);
+    sendRequest("getLCSPData", currentFile, 0, featureX, featureY);
 });
 
 function updatePCUI(data) {
     console.log("PC UI");
-    state.files = data.files;
-    state.columns = data.columns;
+    state[data.group].files = data.files;
+    state[data.group].columns = data.columns;
 
+    let selectFilePC = document.getElementById("selectFilePC" + data.group);
+    console.log(selectFilePC);
     selectFilePC.innerHTML = "";
     selectColumnsPC.innerHTML = "";
-    for (let f of state.files) {
+    for (let f of state[data.group].files) {
         let option = document.createElement("option");
         option.innerHTML = f;
         option.value = f;
@@ -103,7 +117,7 @@ function updatePCUI(data) {
         selectFilePC.appendChild(option);
     }
 
-    for (let c of state.columns) {
+    for (let c of state[data.group].columns) {
         if (c !== "idxFile") {
             let option = document.createElement("option");
             option.innerHTML = c;
@@ -116,19 +130,20 @@ function updatePCUI(data) {
 }
 
 function updateUI(data) {
-    state.files = data.files;
-    state.columns = data.columns;
+    state[data.group].files = data.files;
+    state[data.group].columns = data.columns;
     // mettre à jour la liste des fichiers ajouté sur la tab 1
     let fileLCSPValue = selectFileLCSP.value;
     let xAxisLCSPValue = selectXAxisLCSP.value;
     let yAxisLCSPValue = selectYAxisLCSP.value;
 
+    let addedFilesList = document.getElementById("addedFiles" + data.group);
     addedFilesList.innerHTML = "";
     selectedFilesList.innerHTML = "";
     selectFileLCSP.innerHTML = "";
     selectXAxisLCSP.innerHTML = "";
     selectYAxisLCSP.innerHTML = "";
-    for (let f of state.files) {
+    for (let f of state[data.group].files) {
         let li = document.createElement("li");
         li.className = "addedFile";
         li.innerHTML = `<span>${f} </span>`;
@@ -137,7 +152,7 @@ function updateUI(data) {
         del.innerHTML = "X";
         li.appendChild(del);
         del.addEventListener("click", function () {
-            sendRequest("deleteFile", f);
+            sendRequest("deleteFile", f, 0);
         });
         addedFilesList.appendChild(li);
 
@@ -155,7 +170,7 @@ function updateUI(data) {
         tr.classList.toggle("trDisabled");
     }
 
-    for (let c of state.columns) {
+    for (let c of state[data.group].columns) {
         if (c !== "date_time" && c !== "idxFile" && c !== "group") {
             let optionX = document.createElement("option");
             optionX.innerHTML = c;
@@ -178,11 +193,12 @@ function updateUI(data) {
     // mettre à jour le select colonnes2 de LCSP
 }
 
-function sendRequest(name, data, ...args) {
+function sendRequest(name, data, group, ...args) {
     showLoading();
     let msg = {
         "fct": name,
         "data": data || [],
+        "group": group || 0,
         "args": args
     };
     mySocket.send(JSON.stringify(msg));
@@ -240,7 +256,7 @@ function setupTabs() {
 
     drawParallelCoordinatesTab.addEventListener("click", function (ev) {
         openCity(event, 'drawParallelCoordinatesPlot');
-        askPCData();
+        askPCDataAll();
     });
 
     drawLineChartScatterPlotTab.addEventListener("click", function (ev) {
@@ -262,8 +278,8 @@ function setupListeners() {
     });
 
     addSelectedFiles.addEventListener("click", function (ev) {
-        readAndSendSelectedFiles(listSelectedFiles1, 1);
-        readAndSendSelectedFiles(listSelectedFiles2, 2);
+        readAndSendSelectedFiles(listSelectedFiles1, 0);
+        readAndSendSelectedFiles(listSelectedFiles2, 1);
     });
 }
 
@@ -329,7 +345,7 @@ function readAndSendSelectedFiles(files, id) {
 
 function updateSelectedFilesList(file, val, isShifted) {
     if (val) {
-        if (isShifted){
+        if (isShifted) {
             listSelectedFiles1.push(file);
         } else {
             listSelectedFiles2.push(file);
@@ -411,7 +427,7 @@ function fillFileList(files, table) {
 let drawFromSelection = document.getElementById("drawFromSelection");
 let resetSelection = document.getElementById("resetSelection");
 
-resetSelection.addEventListener("click", askPCData);
+resetSelection.addEventListener("click", askPCDataAll);
 
 drawFromSelection.addEventListener("click", function () {
     let selectedFiles = getSelectedValues(selectFilePC);
@@ -421,27 +437,33 @@ drawFromSelection.addEventListener("click", function () {
 
     console.log(pc);
 
-    sendRequest("getPCData", selectedFiles, selectedColumns, selection);
+    sendRequest("getPCData", selectedFiles, 0, selectedColumns, selection);
 });
 
-function askPCData() {
-    let selectedFiles = getSelectedValues(selectFilePC);
+function askPCDataAll() {
+    askPCData(0);
+    askPCData(1);
+}
+
+function askPCData(group) {
+    let selectedFiles = getSelectedValues(document.getElementById("selectFilePC" + group));
     let selectedColumns = getSelectedValues(selectColumnsPC);
 
-    sendRequest("getPCData", selectedFiles, selectedColumns, {});
+    sendRequest("getPCData", selectedFiles, group, selectedColumns, {});
 }
 
 let pc;
 
-function fillParallelCoordinates(data, cols) {
-    let pcContainer = document.getElementById("pcContainer");
+function fillParallelCoordinates(data, group, cols) {
+    console.warn(group)
+    let pcContainer = document.getElementById("pcContainer" + group);
     pcContainer.innerHTML = "";
-    pc = new ParallelCoords("pcContainer", data);
+    pc = new ParallelCoords("pcContainer" + group, data);
 }
 
 // ************************* LINE CHART + SCATTER PLOT *************************
 function askLCSPData() {
-    sendRequest("getLCSPData", selectFileLCSP.value);
+    sendRequest("getLCSPData", selectFileLCSP.value, 0);
 }
 
 let lcsp;

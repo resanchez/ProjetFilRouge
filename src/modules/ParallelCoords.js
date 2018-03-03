@@ -8,7 +8,7 @@ const defaultOptions = {
     opacity: 0.5,
     color: "lime",
     width: 1000,
-    height: 500,
+    height: 300,
     lineWidth: 1.5
 };
 

@@ -87,9 +87,25 @@
     display: block;
 }
 
+.selectedFile1 {
+    color: deeppink;
+}
+
+.selectedFile2 {
+    color: coral;
+}
+
 /* ADD FILES */
 .trActive {
     background-color: crimson;
+}
+
+.groupActive1 {
+    background-color: deeppink;
+}
+
+.groupActive2 {
+    background-color: coral;
 }
 
 .trDisabled {

@@ -1,8 +1,10 @@
 import pandas as pd
 import numpy as np
 
-df = pd.DataFrame()
-variables = {"files": [], "columns": []}
+df0 = pd.DataFrame()
+df1 = pd.DataFrame()
+variables0 = {"files": [], "columns": [], "group": 0}
+variables1 = {"files": [], "columns": [], "group": 1}
 
 dtypes = {
     "altitude": np.float64,
@@ -28,11 +30,19 @@ dtypes = {
 }
 
 
-def add_selected_files(data, args):
-    global df
+def add_selected_files(data, group, args):
+    print(group)
+    if group == 0:
+        return add_selected_files0(data, args)
+    elif group == 1:
+        return add_selected_files1(data, args)
+
+
+def add_selected_files0(data, args):
+    global df0
 
     d = pd.read_json(data, orient='records', dtype=dtypes)
-    if not (df.empty and d.empty):
+    if not (df0.empty and d.empty):
         # marche pas
         # d.replace('', np.nan, regex=True)
         # d.fillna(method='ffill')
@@ -41,22 +51,54 @@ def add_selected_files(data, args):
         cols = cols.map(lambda x: x.replace(' ', '_').replace('.', '') if isinstance(x, (bytes, str)) else x)
         d.columns = cols
         print(args, len(args))
-        if args:
-            d['group'] = args[0]
-        frames = [df, d]
-        df = pd.concat(frames).drop_duplicates().reset_index(drop=True)
+        frames = [df0, d]
+        df0 = pd.concat(frames).drop_duplicates().reset_index(drop=True)
 
-        variables["files"] = list(df["idxFile"].unique())
-        variables["columns"] = list(df.columns.values)
-        print(df.dtypes)
+        variables0["files"] = list(df0["idxFile"].unique())
+        variables0["columns"] = list(df0.columns.values)
+        print(df0.dtypes)
     else:
-        variables["files"] = []
-        variables["columns"] = []
+        variables0["files"] = []
+        variables0["columns"] = []
 
-    return variables
+    return variables0
 
 
-def get_pc_data(data, args):
+def add_selected_files1(data, args):
+    global df1
+
+    d = pd.read_json(data, orient='records', dtype=dtypes)
+    if not (df1.empty and d.empty):
+        # marche pas
+        # d.replace('', np.nan, regex=True)
+        # d.fillna(method='ffill')
+        # print(d["power"])
+        cols = d.columns
+        cols = cols.map(lambda x: x.replace(' ', '_').replace('.', '') if isinstance(x, (bytes, str)) else x)
+        d.columns = cols
+        print(args, len(args))
+        frames = [df1, d]
+        df1 = pd.concat(frames).drop_duplicates().reset_index(drop=True)
+
+        variables1["files"] = list(df1["idxFile"].unique())
+        variables1["columns"] = list(df1.columns.values)
+        print(df1.dtypes)
+    else:
+        variables1["files"] = []
+        variables1["columns"] = []
+
+    return variables1
+
+
+def get_pc_data(data, group, args):
+    df = df0
+
+    if group == 1:
+        print("DataFrame Group 1")
+        df = df1
+
+    print("PC DATA")
+    print(data)
     if args:
         columns = args[0]
         lims = args[1]
@@ -80,13 +122,11 @@ def get_pc_data(data, args):
         limited = df.query(query_string)
         # limited = df.loc[df["phase_no"] == '1']
 
-        print
-
     else:
         print("no lims")
         limited = filtered
 
-    return {"pcData": create_dict(limited[columns]), "pcColumns": list(columns)}
+    return {"pcData": create_dict(limited[columns]), "group": group, "pcColumns": list(columns)}
 
 
 def get_lc_sp_data(data, args):

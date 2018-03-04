@@ -57,14 +57,34 @@
 
     <div id="drawParallelCoordinatesPlot" class="tabcontent">
         <div id="mySidenavPC" class="sidenav">
-            <a href="javascript:void(0)" class="closebtn" id="closeNavPC">&times;</a>
-            <a href="#">Files group 1</a>
-            <select multiple id="selectFilePC0"></select>
-            <a href="#">Files group 2</a>
-            <select multiple id="selectFilePC1"></select>
-            <a href="#">Columns selection</a>
-            <select multiple id="selectColumnsPC"></select>
-            <button id="displayPC">Display</button>
+            <div class="tabH">
+                <button id="tablinks0" class="tablinks">GROUP 1</button>
+                <button id="tablinks1" class="tablinks">GROUP 2</button>
+            </div>
+
+            <div id="tab0" class="tabcontentH">
+                <a href="javascript:void(0)" class="closebtn" id="closeNavPC">&times;</a>
+                <a href="#">Files group 1</a>
+                <select multiple id="selectFilePC0"></select>
+                <a href="#">Columns selection 1</a>
+                <select multiple id="selectColumnsPC0"></select>
+                <!--<ul id="columnsPC0" class="columnsPC">-->
+                    <!--<li draggable="true" ondragstart="dragStarted(event)">Apples</li>-->
+                    <!--<li draggable="true" ondragstart="dragStarted(event)">Oranges</li>-->
+                    <!--<li draggable="true" ondragstart="dragStarted(event)">Bananas</li>-->
+                    <!--<li draggable="true" ondragstart="dragStarted(event)">Strawberries</li>-->
+                <!--</ul>-->
+                <button id="displayPC0">Display 1</button>
+            </div>
+
+            <div id="tab1" class="tabcontentH">
+                <a href="#">Files group 2</a>
+                <select multiple id="selectFilePC1"></select>
+                <a href="#">Columns selection 2</a>
+                <select multiple id="selectColumnsPC1"></select>
+                <button id="displayPC1">Display 2</button><br>
+            </div>
+            <button id="displayPCAll">Display All</button>
         </div>
 
         <button id="openSideNavPC">Options</button>
@@ -77,16 +97,23 @@
     <div id="drawLineChartScatterPlot" class="tabcontent">
         <div id="mySidenavLCSP" class="sidenav">
             <a href="javascript:void(0)" class="closebtn" id="closeNavLCSP">&times;</a>
-            <a href="#">Files</a>
-            <select id="selectFileLCSP"></select>
-            <a href="#">Columns selection</a>
-            <select id="xAxisLCSP"></select>
-            <select id="yAxisLCSP"></select>
+            <a href="#">Files group 1</a>
+            <select id="selectFileLCSP0"></select>
+            <a href="#">Columns selection 1</a>
+            <select id="xAxisLCSP0"></select>
+            <select id="yAxisLCSP0"></select>
+            <a href="#">Files group 2</a>
+            <select id="selectFileLCSP1"></select>
+            <a href="#">Columns selection 2</a>
+            <select id="xAxisLCSP1"></select>
+            <select id="yAxisLCSP1"></select>
         </div>
 
         <button id="openSideNavLCSP">Options</button>
 
-        <div id="lscpContainer">
+        <div id="lcspDisplay">
+            <div id="lscpContainer0"></div>
+            <div id="lscpContainer1"></div>
         </div>
     </div>
     <!--<script src="//d3js.org/d3.v4.min.js"></script>-->

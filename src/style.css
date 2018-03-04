@@ -83,6 +83,38 @@
     display: none;
 }
 
+.fileInfo {
+    user-select: none;
+}
+
+.tabcontentH {
+    display: none;
+}
+
+.tabH button {
+    width: 40%;
+    float: left;
+    border: none;
+    outline: none;
+    cursor: pointer;
+    padding: 14px 16px;
+    transition: 0.3s;
+}
+
+/* Change background color of buttons on hover */
+.tabH button:hover {
+    background-color: #ddd;
+}
+
+/* Create an active/current tablink class */
+.tabH button.active {
+    background-color: #ccc;
+}
+
+#tab0 {
+    display: block;
+}
+
 #addFiles {
     display: block;
 }
@@ -150,7 +182,31 @@
     position: fixed;
 }
 
-#lscpContainer {
+/*#lscpContainer {*/
+    /*width: 100%;*/
+    /*height: 100%;*/
+/*}*/
+
+#lcspDisplay {
+    display: grid;
+    grid-template-columns: 50% auto;
+    grid-column-gap: 5px;
+}
+
+#lscpContainer0 {
+    grid-column-start: 1;
+    grid-column-end: 1;
+    /*height: inherit;*/
+    /*overflow:auto;*/
+    width: 100%;
+    height: 100%;
+}
+
+#lscpContainer1 {
+    grid-column-start: 2;
+    grid-column-end: 2;
+    /*height: inherit;*/
+    /*overflow:auto;*/
     width: 100%;
     height: 100%;
 }
@@ -369,4 +425,13 @@ div.tooltip {
     right: 25px;
     font-size: 36px;
     margin-left: 50px;
+}
+
+
+.columnsPC {
+    color: white;
+}
+
+[draggable] {
+    user-select: none;
 }

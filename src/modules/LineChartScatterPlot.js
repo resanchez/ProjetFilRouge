@@ -3,12 +3,13 @@ import fillWithDefault from "./defaultOptions.js";
 const defaultOptions = {
     opacity: 0.5,
     colorScatter: "orange",
-    width: 800,
-    height: 325
+    width: 500,
+    height: 300
 };
 
 class LineChartScatterPlot {
     constructor(id, data, cols, options = {}) {
+        this.divHTML = document.querySelector("#" + id);
         this.div = d3.select("#" + id);
         this.data = data;
         let opts = fillWithDefault(options, defaultOptions, false);
@@ -144,7 +145,8 @@ class LineChartScatterPlot {
         }
 
         // set the ranges
-        let x = d3.scaleTime().range([0, width]);
+//        let x = d3.scaleTime().range([0, width]);
+        let x = d3.scaleLinear().range([0, width]);
         let yLeft = d3.scaleLinear().range([height, 0]);
         let yRight = d3.scaleLinear().range([height, 0]);
 
@@ -188,7 +190,7 @@ class LineChartScatterPlot {
         // appends a 'group' element to 'svg'
         // moves the 'group' element to the top left margin
 
-        d3.selectAll(".svgTemp").remove();
+        // d3.selectAll(".svgTemp").remove();
 
         let svg = this.container.append("svg")
             .attr("class", "svgTemp")
@@ -245,7 +247,8 @@ class LineChartScatterPlot {
         // LINE CHART
         // Scale the range of the data
         x.domain(d3.extent(data, function (d) {
-            return d["date_time"];
+            return d["flight_time"];
+//            return d["date_time"];
         }));
 
         yLeft.domain([d3.min(data, function (d) {
@@ -262,7 +265,7 @@ class LineChartScatterPlot {
         // define the 1st line
         let valueline = d3.line()
             .x(function (d) {
-                return x(d["date_time"]);
+                return x(d["flight_time"]);
             })
             .y(function (d) {
                 return yLeft(d[traits[0]]);
@@ -271,7 +274,7 @@ class LineChartScatterPlot {
         // define the 2nd line
         let valueline2 = d3.line()
             .x(function (d) {
-                return x(d["date_time"]);
+                return x(d["flight_time"]);
             })
             .y(function (d) {
                 return yRight(d[traits[1]]);
@@ -307,7 +310,8 @@ class LineChartScatterPlot {
             .style("stroke", "lime")
             .attr("d", valueline2);
 
-        let xAxis = d3.axisBottom(x).tickFormat(d3.timeFormat("%H:%M:%S"))
+        // let xAxis = d3.axisBottom(x).tickFormat(d3.timeFormat("%H:%M:%S"))
+        let xAxis = d3.axisBottom(x).ticks(5);
 
         // Add the X Axis
         let svgXAxis = context.append("g")
@@ -320,7 +324,7 @@ class LineChartScatterPlot {
                 "translate(" + (width / 2) + " ," +
                 (height + margin.top + 20) + ")")
             .style("text-anchor", "middle")
-            .text("date_time");
+            .text("flight_time");
 
         // Add the Y Axis
         context.append("g")
@@ -466,15 +470,16 @@ class LineChartScatterPlot {
 
         this.nodeBrush = tippi;
 
-        let br = document.querySelector(".brushSc");
+        let divHTML = this.divHTML;
+        let br = divHTML.querySelector(".brushSc");
 
         function colorSelectedPts(lims) {
             circles.attr("class", function (d) {
-                return (xt(d["date_time"]) >= lims[0] && xt(d["date_time"]) <= lims[1]) ? "colored" : "uncolored";
+                return (xt(d["flight_time"]) >= lims[0] && xt(d["flight_time"]) <= lims[1]) ? "colored" : "uncolored";
             });
 
             // TODO optimiser avec des live collection ?
-            document.querySelectorAll(".colored").forEach(function (el) {
+            divHTML.querySelectorAll(".colored").forEach(function (el) {
                 el.parentNode.appendChild(el);
             });
 
@@ -496,8 +501,8 @@ class LineChartScatterPlot {
             });
 
             // Dates arrays. We suppose they are sorted
-            let s = brushed._groups[0].map(u => xt(u.__data__["date_time"]));
-            let all = circles._groups[0].map(u => xt(u.__data__["date_time"]));
+            let s = brushed._groups[0].map(u => xt(u.__data__["flight_time"]));
+            let all = circles._groups[0].map(u => xt(u.__data__["flight_time"]));
 
             // console.log(s.length, all.length);
             // console.log(all);
@@ -574,10 +579,10 @@ class LineChartScatterPlot {
                 that.nodeBrushSc.call(that.brushSc.move, null);
             }
             line1.attr("d", valueline.x(function (d) {
-                return xt(d["date_time"]);
+                return xt(d["flight_time"]);
             }));
             line2.attr("d", valueline2.x(function (d) {
-                return xt(d["date_time"]);
+                return xt(d["flight_time"]);
             }));
             svgXAxis.call(xAxis.scale(xt));
         }

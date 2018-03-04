@@ -27,7 +27,7 @@ window.addEventListener("load", function () {
             updateUI(res.data);
             updatePCUI(res.data);
         } else if (res.fct === "getLCSPData") {
-            fillLineChartScatterPlot(res.data.lcspData, res.data.lcspColumns);
+            fillLineChartScatterPlot(res.data.lcspData, res.data.group, res.data.lcspColumns);
         } else if (res.fct === "getColumnsLCSP") {
             createSelectAxis(res.data);
         } else if (res.fct === "getPCData") {
@@ -38,16 +38,58 @@ window.addEventListener("load", function () {
 
 let loadingDiv = document.getElementById("loaderDiv");
 let btnHideLoading = document.getElementById("hideLoading");
+let loadingCount = 0;
 
 function showLoading() {
-    loadingDiv.style.display = "flex";
+    if (loadingCount === 0) {
+        loadingDiv.style.display = "flex";
+    }
+    loadingCount++;
 }
 
 function hideLoading() {
-    loadingDiv.style.display = "none";
+    loadingCount--;
+    if (loadingCount === 0) {
+        loadingDiv.style.display = "none";
+    }
 }
 
 btnHideLoading.addEventListener("click", hideLoading);
+
+let btnTabPC0 = document.getElementById("tablinks0");
+btnTabPC0.addEventListener("click", (ev) => tabsPC(ev, 0));
+let btnTabPC1 = document.getElementById("tablinks1");
+btnTabPC1.addEventListener("click", (ev) => tabsPC(ev, 1));
+
+function tabsPC(evt, group) {
+    // Declare all variables
+    let i, tabcontent, tablinks;
+
+    // Get all elements with class="tabcontent" and hide them
+    tabcontent = document.getElementsByClassName("tabcontentH");
+    for (i = 0; i < tabcontent.length; i++) {
+        tabcontent[i].style.display = "none";
+    }
+
+    // Get all elements with class="tablinks" and remove the class "active"
+    tablinks = document.getElementsByClassName("tablinks");
+    for (i = 0; i < tablinks.length; i++) {
+        tablinks[i].className = tablinks[i].className.replace(" active", "");
+    }
+
+    // Show the current tab, and add an "active" class to the button that opened the tab
+    document.getElementById("tab" + group).style.display = "block";
+    evt.currentTarget.className += " active";
+}
+//
+// function dragStarted (evt) {
+// //start drag
+//     source = evt.target;
+// //set data
+//     evt.dataTransfer.setData("text/plain", evt.target.innerHTML);
+// //specify allowed transfer
+//     evt.dataTransfer.effectAllowed = "move";
+// }
 
 let state = {
     0: {
@@ -65,39 +107,70 @@ let state = {
 let selectedFilesList = document.getElementById("selectedFiles");
 // let selectFilePC = document.getElementById("selectFilePC0");
 // let selectFilePC = document.getElementById("selectFilePC1");
-let selectColumnsPC = document.getElementById("selectColumnsPC");
-let btnDisplayPC = document.getElementById("displayPC");
-let selectFileLCSP = document.getElementById("selectFileLCSP");
-let selectXAxisLCSP = document.getElementById("xAxisLCSP");
-let selectYAxisLCSP = document.getElementById("yAxisLCSP");
+// let selectColumnsPC = document.getElementById("selectColumnsPC");
+let btnDisplayPC0 = document.getElementById("displayPC0");
+let btnDisplayPC1 = document.getElementById("displayPC1");
+let btnDisplayPCAll = document.getElementById("displayPCAll");
+let selectFileLCSP0 = document.getElementById("selectFileLCSP0");
+let selectFileLCSP1 = document.getElementById("selectFileLCSP1");
+let selectXAxisLCSP0 = document.getElementById("xAxisLCSP0");
+let selectYAxisLCSP0 = document.getElementById("yAxisLCSP0");
+let selectXAxisLCSP1 = document.getElementById("xAxisLCSP1");
+let selectYAxisLCSP1 = document.getElementById("yAxisLCSP1");
 
 // PARALLEL COORD
 function getSelectedValues(select) {
     return [...select.options].filter(option => option.selected).map(option => option.value);
 }
 
-btnDisplayPC.addEventListener("click", function (ev) {
+btnDisplayPCAll.addEventListener("click", function (ev) {
     askPCDataAll();
+});
+
+btnDisplayPC0.addEventListener("click", function (ev) {
+    askPCData(0);
+});
+
+btnDisplayPC1.addEventListener("click", function (ev) {
+    askPCData(1);
 });
 
 
 // LCSP
-selectFileLCSP.addEventListener("change", function (ev) {
-    sendRequest("getLCSPData", this.value, 0, selectXAxisLCSP.value, selectYAxisLCSP.value);
+selectFileLCSP0.addEventListener("change", function (ev) {
+    sendRequest("getLCSPData", this.value, 0, selectXAxisLCSP0.value, selectYAxisLCSP0.value);
 });
 
-selectXAxisLCSP.addEventListener("change", function (ev) {
-    let featureX = selectXAxisLCSP.value;
-    let featureY = selectYAxisLCSP.value;
-    let currentFile = selectFileLCSP.value;
+selectXAxisLCSP0.addEventListener("change", function (ev) {
+    let featureX = selectXAxisLCSP0.value;
+    let featureY = selectYAxisLCSP0.value;
+    let currentFile = selectFileLCSP0.value;
     sendRequest("getLCSPData", currentFile, 0, featureX, featureY);
 });
 
-selectYAxisLCSP.addEventListener("change", function (ev) {
-    let featureX = selectXAxisLCSP.value;
-    let featureY = selectYAxisLCSP.value;
-    let currentFile = selectFileLCSP.value;
+selectYAxisLCSP0.addEventListener("change", function (ev) {
+    let featureX = selectXAxisLCSP0.value;
+    let featureY = selectYAxisLCSP0.value;
+    let currentFile = selectFileLCSP0.value;
     sendRequest("getLCSPData", currentFile, 0, featureX, featureY);
+});
+
+selectFileLCSP1.addEventListener("change", function (ev) {
+    sendRequest("getLCSPData", this.value, 1, selectXAxisLCSP1.value, selectYAxisLCSP1.value);
+});
+
+selectXAxisLCSP1.addEventListener("change", function (ev) {
+    let featureX = selectXAxisLCSP1.value;
+    let featureY = selectYAxisLCSP1.value;
+    let currentFile = selectFileLCSP1.value;
+    sendRequest("getLCSPData", currentFile, 1, featureX, featureY);
+});
+
+selectYAxisLCSP1.addEventListener("change", function (ev) {
+    let featureX = selectXAxisLCSP1.value;
+    let featureY = selectYAxisLCSP1.value;
+    let currentFile = selectFileLCSP1.value;
+    sendRequest("getLCSPData", currentFile, 1, featureX, featureY);
 });
 
 function updatePCUI(data) {
@@ -106,6 +179,7 @@ function updatePCUI(data) {
     state[data.group].columns = data.columns;
 
     let selectFilePC = document.getElementById("selectFilePC" + data.group);
+    let selectColumnsPC = document.getElementById("selectColumnsPC" + data.group);
     console.log(selectFilePC);
     selectFilePC.innerHTML = "";
     selectColumnsPC.innerHTML = "";
@@ -133,6 +207,9 @@ function updateUI(data) {
     state[data.group].files = data.files;
     state[data.group].columns = data.columns;
     // mettre à jour la liste des fichiers ajouté sur la tab 1
+    let selectFileLCSP = document.getElementById("selectFileLCSP" + data.group);
+    let selectXAxisLCSP = document.getElementById("xAxisLCSP" + data.group);
+    let selectYAxisLCSP = document.getElementById("yAxisLCSP" + data.group);
     let fileLCSPValue = selectFileLCSP.value;
     let xAxisLCSPValue = selectXAxisLCSP.value;
     let yAxisLCSPValue = selectYAxisLCSP.value;
@@ -152,7 +229,7 @@ function updateUI(data) {
         del.innerHTML = "X";
         li.appendChild(del);
         del.addEventListener("click", function () {
-            sendRequest("deleteFile", f, 0);
+            sendRequest("deleteFile", f, data.group);
         });
         addedFilesList.appendChild(li);
 
@@ -171,7 +248,8 @@ function updateUI(data) {
     }
 
     for (let c of state[data.group].columns) {
-        if (c !== "date_time" && c !== "idxFile" && c !== "group") {
+        if (c !== "flight_time" && c !== "idxFile" && c !== "group") {
+//        if (c !== "date_time" && c !== "idxFile" && c !== "group") {
             let optionX = document.createElement("option");
             optionX.innerHTML = c;
             optionX.value = c;
@@ -261,7 +339,7 @@ function setupTabs() {
 
     drawLineChartScatterPlotTab.addEventListener("click", function (ev) {
         openCity(event, 'drawLineChartScatterPlot');
-        askLCSPData(listFilesIdx);
+        askLCSPDataAll();
     });
 }
 
@@ -447,7 +525,8 @@ function askPCDataAll() {
 
 function askPCData(group) {
     let selectedFiles = getSelectedValues(document.getElementById("selectFilePC" + group));
-    let selectedColumns = getSelectedValues(selectColumnsPC);
+    let selectedColumns = getSelectedValues(document.getElementById("selectColumnsPC" + group));
+    // let selectedColumns = getSelectedValues(selectColumnsPC);
 
     sendRequest("getPCData", selectedFiles, group, selectedColumns, {});
 }
@@ -455,23 +534,32 @@ function askPCData(group) {
 let pc;
 
 function fillParallelCoordinates(data, group, cols) {
-    console.warn(group)
     let pcContainer = document.getElementById("pcContainer" + group);
     pcContainer.innerHTML = "";
     pc = new ParallelCoords("pcContainer" + group, data);
 }
 
 // ************************* LINE CHART + SCATTER PLOT *************************
-function askLCSPData() {
-    sendRequest("getLCSPData", selectFileLCSP.value, 0);
+function askLCSPDataAll() {
+    askLCSPData(0);
+    askLCSPData(1);
+}
+
+function askLCSPData(group) {
+    let selectFileLCSP = document.getElementById("selectFileLCSP" + group);
+    sendRequest("getLCSPData", selectFileLCSP.value, group);
 }
 
 let lcsp;
 
-function fillLineChartScatterPlot(data, cols) {
-    let lscpContainer = document.getElementById("lscpContainer");
+function fillLineChartScatterPlot(data, group, cols) {
+    let lscpContainer = document.getElementById("lscpContainer" + group);
+    let selectXAxisLCSP = document.getElementById("xAxisLCSP" + group);
+    let selectYAxisLCSP = document.getElementById("yAxisLCSP" + group);
     lscpContainer.innerHTML = "";
-    lcsp = new LineChartScatterPlot("lscpContainer", data, cols);
+
+    console.log(lscpContainer, group, data, cols);
+    lcsp = new LineChartScatterPlot("lscpContainer" + group, data, cols);
 
     selectXAxisLCSP.value = lcsp.xAxis;
     selectYAxisLCSP.value = lcsp.yAxis;

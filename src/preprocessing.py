@@ -97,8 +97,6 @@ def get_pc_data(data, group, args):
         print("DataFrame Group 1")
         df = df1
 
-    print("PC DATA")
-    print(data)
     if args:
         columns = args[0]
         lims = args[1]
@@ -129,37 +127,58 @@ def get_pc_data(data, group, args):
     return {"pcData": create_dict(limited[columns]), "group": group, "pcColumns": list(columns)}
 
 
-def get_lc_sp_data(data, args):
+def get_lc_sp_data(data, group, args):
+    df = df0
+
+    if group == 1:
+        print("DataFrame Group 1")
+        df = df1
+
     if args:
         feature_x = args[0]
         feature_y = args[1]
     else:
         feature_x = "altitude"
         feature_y = "fuel_flow"
-    return {"lcspData": create_dict(df[df["idxFile"] == data][["date_time", feature_x, feature_y]]),
+    return {"lcspData": create_dict(df[df["idxFile"] == data][["flight_time", feature_x, feature_y]]), "group": group,
             "lcspColumns": [feature_x, feature_y]}
 
 
-def get_list_files(data, args):
-    return list(df["idxFile"].unique())
+# def get_list_files(data, args):
+#     return list(df["idxFile"].unique())
+#
+#
+# def get_columns(data, args):
+#     return list(df.columns.values)
 
 
-def get_columns(data, args):
-    return list(df.columns.values)
+def delete_file(data, group, args):
+    global df0
+    global df1
 
+    if group == 0:
+        df0 = df0.loc[df0["idxFile"] != data]
 
-def delete_file(data, args):
-    global df
-    df = df.loc[df["idxFile"] != data]
+        if not df0.empty:
+            variables0["files"] = list(df0["idxFile"].unique())
+            variables0["columns"] = list(df0.columns.values)
+        else:
+            variables0["files"] = []
+            variables0["columns"] = []
 
-    if not df.empty:
-        variables["files"] = list(df["idxFile"].unique())
-        variables["columns"] = list(df.columns.values)
-    else:
-        variables["files"] = []
-        variables["columns"] = []
+        return variables0
 
-    return variables
+    elif group == 1:
+        df1 = df1.loc[df1["idxFile"] != data]
+
+        if not df1.empty:
+            variables1["files"] = list(df1["idxFile"].unique())
+            variables1["columns"] = list(df1.columns.values)
+        else:
+            variables1["files"] = []
+            variables1["columns"] = []
+
+        return variables1
 
 
 def create_df(json_str):

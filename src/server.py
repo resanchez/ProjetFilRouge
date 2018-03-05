@@ -12,7 +12,7 @@ import json
 from src.preprocessing import *
 
 functions = {'addSelectedFiles': add_selected_files, 'getLCSPData': get_lc_sp_data,
-             'getPCData': get_pc_data, 'deleteFile': delete_file}
+             'getPCData': get_pc_data, 'deleteFile': delete_file, 'getLCSPGeneralizedData': get_lc_sp_generalized_data}
 
 
 class MyServerProtocol(WebSocketServerProtocol):

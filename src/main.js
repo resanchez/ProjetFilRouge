@@ -1,6 +1,7 @@
 // ************************* WEBSOCKET *************************
 import LineChartScatterPlot from "./modules/LineChartScatterPlot.js";
 import ParallelCoords from "./modules/ParallelCoords.js";
+import LineChartScatterPlotGeneralized from "./modules/LineChartScatterPlotGeneralized.js";
 
 let mySocket;
 
@@ -32,6 +33,9 @@ window.addEventListener("load", function () {
             createSelectAxis(res.data);
         } else if (res.fct === "getPCData") {
             fillParallelCoordinates(res.data.pcData, res.data.group, res.data.pcColumns);
+        } else if (res.fct === "getLCSPGeneralizedData") {
+            console.log(res.data.lcspGeneralizedData);
+            fillLineChartScatterPlotGeneralized(res.data.lcspGeneralizedData, res.data.group, res.data.lcspGeneralizedColumns);
         }
     };
 });
@@ -81,6 +85,7 @@ function tabsPC(evt, group) {
     document.getElementById("tab" + group).style.display = "block";
     evt.currentTarget.className += " active";
 }
+
 //
 // function dragStarted (evt) {
 // //start drag
@@ -327,6 +332,7 @@ function setupTabs() {
     let addFilesTab = document.getElementById("addFilesTab");
     let drawParallelCoordinatesTab = document.getElementById("drawParallelCoordinatesTab");
     let drawLineChartScatterPlotTab = document.getElementById("drawLineChartScatterPlotTab");
+    let drawLineChartScatterPlotGeneralizedTab = document.getElementById("drawLineChartScatterPlotGeneralizedTab");
 
     addFilesTab.addEventListener("click", function (ev) {
         openCity(event, 'addFiles');
@@ -340,6 +346,11 @@ function setupTabs() {
     drawLineChartScatterPlotTab.addEventListener("click", function (ev) {
         openCity(event, 'drawLineChartScatterPlot');
         askLCSPDataAll();
+    });
+
+    drawLineChartScatterPlotGeneralizedTab.addEventListener("click", function (ev) {
+        openCity(event, 'drawLineChartScatterPlotGeneralized');
+        askLCSPGeneralizedDataAll();
     });
 }
 
@@ -566,3 +577,19 @@ function fillLineChartScatterPlot(data, group, cols) {
 
 }
 
+// ************************* LINE CHART + SCATTER PLOT GENERALIZED *************************
+function askLCSPGeneralizedDataAll() {
+    askLCSPGeneralizedData(0);
+    // askLCSPGeneralizedData(1);
+}
+
+function askLCSPGeneralizedData(group) {
+    sendRequest("getLCSPGeneralizedData", {}, group);
+}
+
+function fillLineChartScatterPlotGeneralized(data, group, cols) {
+    let lscpContainer = document.getElementById("lscpGeneralizedContainer");
+    lscpContainer.innerHTML = "";
+
+    lcsp = new LineChartScatterPlotGeneralized("lscpGeneralizedContainer", data, cols);
+}

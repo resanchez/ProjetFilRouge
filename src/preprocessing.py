@@ -144,6 +144,30 @@ def get_lc_sp_data(data, group, args):
             "lcspColumns": [feature_x, feature_y]}
 
 
+def get_lc_sp_generalized_data(data, group, args):
+    df = df0
+
+    if group == 1:
+        print("DataFrame Group 1")
+        df = df1
+
+    if args:
+        feature_x = args[0]
+        feature_y = args[1]
+    else:
+        feature_x = "altitude"
+        feature_y = "fuel_flow"
+
+    grouped = df.groupby(by="idxFile", as_index=False) \
+        .apply(lambda x: x[["idxFile", "flight_time", feature_x, feature_y]].to_dict('r')) \
+        .reset_index() \
+        .rename(columns={0: "data"})
+    # ["data"].tolist()
+
+    return {"lcspGeneralizedData": create_dict(grouped), "group": group,
+            "lcspGeneralizedColumns": [feature_x, feature_y]}
+
+
 # def get_list_files(data, args):
 #     return list(df["idxFile"].unique())
 #

@@ -10,6 +10,7 @@
         <button id="addFilesTab" class="tablinks active">Add Files</button>
         <button id="drawParallelCoordinatesTab" class="tablinks">Parallel Coordinates</button>
         <button id="drawLineChartScatterPlotTab" class="tablinks">LineChart & ScatterPlot</button>
+        <button id="drawLineChartScatterPlotGeneralizedTab" class="tablinks">Generalized LineChart & ScatterPlot</button>
     </div>
     <div id="loaderDiv">
         <div class="Aligner-item Aligner-item--top">
@@ -116,11 +117,21 @@
             <div id="lscpContainer1"></div>
         </div>
     </div>
+
+
+    <div id="drawLineChartScatterPlotGeneralized" class="tabcontent">
+        <div id="lcspGeneralizedDisplay">
+            <div id="lscpGeneralizedContainer"></div>
+            <!--<div id="lscpAllContainer1"></div>-->
+        </div>
+    </div>
+
     <!--<script src="//d3js.org/d3.v4.min.js"></script>-->
     <script src="d3.min.js"></script>
     <script src="render-queue.js"></script>
     <script type="module" src="modules/defaultOptions.js"></script>
     <script type="module" src="modules/LineChartScatterPlot.js"></script>
+    <script type="module" src="modules/LineChartScatterPlotGeneralized.js"></script>
     <script type="module" src="modules/ParallelCoords.js"></script>
     <script type="module" src="main.js"></script>
 </body>

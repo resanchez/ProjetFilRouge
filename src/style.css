@@ -373,6 +373,39 @@ div.tooltip {
     fill: grey;
 }
 
+
+.flightsLeft {
+    fill: none;
+    stroke: hotpink;
+    /*stroke-linejoin: round;*/
+    /*stroke-linecap: round;*/
+    stroke-width: 1px;
+    stroke-opacity: 0.2;
+}
+
+.flightsRight {
+    fill: none;
+    stroke: lime;
+    /*stroke-linejoin: round;*/
+    /*stroke-linecap: round;*/
+    stroke-width: 1px;
+    stroke-opacity: 0.2;
+
+}
+
+#svgG {
+    overflow: visible;
+}
+
+.overFlight {
+    stroke-width: 2px;
+    stroke-opacity: 1;
+}
+
+.overLegend {
+    font-weight: bold;
+}
+
 /* The side navigation menu */
 .sidenav {
     height: 100%; /* 100% Full-height */

@@ -27,6 +27,14 @@ class LineChartScatterPlotGeneralized {
         this.fillLCSP(this.data);
     }
 
+    get xAxis() {
+        return this.traits[0];
+    }
+
+    get yAxis() {
+        return this.traits[1];
+    }
+
     instantiateSupport() {
         console.log(this);
 

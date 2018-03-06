@@ -24,9 +24,11 @@ window.addEventListener("load", function () {
         if (res.fct === "addSelectedFiles") {
             updateUI(res.data);
             updatePCUI(res.data);
+            updateGeneralizedUI(res.data);
         } else if (res.fct === "deleteFile") {
             updateUI(res.data);
             updatePCUI(res.data);
+            updateGeneralizedUI(res.data);
         } else if (res.fct === "getLCSPData") {
             fillLineChartScatterPlot(res.data.lcspData, res.data.group, res.data.lcspColumns);
         } else if (res.fct === "getColumnsLCSP") {
@@ -86,7 +88,6 @@ function tabsPC(evt, group) {
     evt.currentTarget.className += " active";
 }
 
-//
 // function dragStarted (evt) {
 // //start drag
 //     source = evt.target;
@@ -106,22 +107,24 @@ let state = {
         columns: []
     }
 };
-// let addedFilesList0 = document.getElementById("addedFiles0");
-// let addedFilesList1 = document.getElementById("addedFiles1");
+
+// ************************* VARIABLES SELECTION *************************
 
 let selectedFilesList = document.getElementById("selectedFiles");
-// let selectFilePC = document.getElementById("selectFilePC0");
-// let selectFilePC = document.getElementById("selectFilePC1");
-// let selectColumnsPC = document.getElementById("selectColumnsPC");
+
 let btnDisplayPC0 = document.getElementById("displayPC0");
 let btnDisplayPC1 = document.getElementById("displayPC1");
 let btnDisplayPCAll = document.getElementById("displayPCAll");
+
 let selectFileLCSP0 = document.getElementById("selectFileLCSP0");
 let selectFileLCSP1 = document.getElementById("selectFileLCSP1");
 let selectXAxisLCSP0 = document.getElementById("xAxisLCSP0");
 let selectYAxisLCSP0 = document.getElementById("yAxisLCSP0");
 let selectXAxisLCSP1 = document.getElementById("xAxisLCSP1");
 let selectYAxisLCSP1 = document.getElementById("yAxisLCSP1");
+
+let selectXAxisLCSPGeneralized0 = document.getElementById("xAxisLCSPGeneralized0");
+let selectYAxisLCSPGeneralized0 = document.getElementById("yAxisLCSPGeneralized0");
 
 // PARALLEL COORD
 function getSelectedValues(select) {
@@ -178,6 +181,20 @@ selectYAxisLCSP1.addEventListener("change", function (ev) {
     sendRequest("getLCSPData", currentFile, 1, featureX, featureY);
 });
 
+// LCSP Generalized
+selectXAxisLCSPGeneralized0.addEventListener("change", function (ev) {
+    let featureX = selectXAxisLCSPGeneralized0.value;
+    let featureY = selectYAxisLCSPGeneralized0.value;
+    sendRequest("getLCSPGeneralizedData", {}, 0, featureX, featureY);
+});
+
+selectYAxisLCSPGeneralized0.addEventListener("change", function (ev) {
+    let featureX = selectXAxisLCSPGeneralized0.value;
+    let featureY = selectYAxisLCSPGeneralized0.value;
+    sendRequest("getLCSPGeneralizedData", {}, 0, featureX, featureY);
+});
+
+// ************************* UPDATE UI FUNCTIONS *************************
 function updatePCUI(data) {
     console.log("PC UI");
     state[data.group].files = data.files;
@@ -211,7 +228,7 @@ function updatePCUI(data) {
 function updateUI(data) {
     state[data.group].files = data.files;
     state[data.group].columns = data.columns;
-    // mettre à jour la liste des fichiers ajouté sur la tab 1
+
     let selectFileLCSP = document.getElementById("selectFileLCSP" + data.group);
     let selectXAxisLCSP = document.getElementById("xAxisLCSP" + data.group);
     let selectYAxisLCSP = document.getElementById("yAxisLCSP" + data.group);
@@ -271,10 +288,46 @@ function updateUI(data) {
             }
         }
     }
-    // mettre à jour le select fichier de LCSP
-    // mettre à jour le select colonnes1 de LCSP
-    // mettre à jour le select colonnes2 de LCSP
 }
+
+
+function updateGeneralizedUI(data) {
+    state[data.group].files = data.files;
+    state[data.group].columns = data.columns;
+
+    let selectXAxisLCSP = document.getElementById("xAxisLCSPGeneralized" + data.group);
+    let selectYAxisLCSP = document.getElementById("yAxisLCSPGeneralized" + data.group);
+    let xAxisLCSPValue = selectXAxisLCSP.value;
+    let yAxisLCSPValue = selectYAxisLCSP.value;
+
+    selectXAxisLCSP.innerHTML = "";
+    selectYAxisLCSP.innerHTML = "";
+    // for (let f of state[data.group].files) {
+    //     let option = document.createElement("option");
+    //     option.innerHTML = f;
+    //     option.value = f;
+    // }
+
+    for (let c of state[data.group].columns) {
+        if (c !== "flight_time" && c !== "idxFile" && c !== "group") {
+            let optionX = document.createElement("option");
+            optionX.innerHTML = c;
+            optionX.value = c;
+
+            let optionY = optionX.cloneNode(true);
+
+            selectXAxisLCSP.appendChild(optionX);
+            selectYAxisLCSP.appendChild(optionY);
+            if (c === xAxisLCSPValue && c) {
+                selectXAxisLCSP.value = xAxisLCSPValue;
+            }
+            if (c === yAxisLCSPValue && c) {
+                selectYAxisLCSP.value = yAxisLCSPValue;
+            }
+        }
+    }
+}
+
 
 function sendRequest(name, data, group, ...args) {
     showLoading();
@@ -326,6 +379,7 @@ function main() {
     setupListeners();
     setUpPCOptions();
     setUpOptions();
+    setUpGeneralizedOptions();
 }
 
 function setupTabs() {
@@ -399,6 +453,20 @@ function setUpOptions() {
 }
 
 
+function setUpGeneralizedOptions() {
+    let sideNav = document.getElementById("openSideNavLCSPGeneralized");
+    let closeNav = document.getElementById("closeNavLCSPGeneralized");
+
+    sideNav.addEventListener("click", function (ev) {
+        document.getElementById("mySidenavLCSPGeneralized").style.width = "250px";
+    });
+
+    closeNav.addEventListener("click", function (ev) {
+        document.getElementById("mySidenavLCSPGeneralized").style.width = "0";
+    });
+}
+
+
 function readAndSendSelectedFiles(files, id) {
     let dataAll = [];
     let nbFiles = 0;
@@ -462,7 +530,6 @@ function fillFileList(files, table) {
     if (oldTbody) {
         oldTbody.parentElement.removeChild(oldTbody);
     }
-
 
     let tbody = document.createElement("tbody");
     table.appendChild(tbody);
@@ -562,6 +629,7 @@ function askLCSPData(group) {
 }
 
 let lcsp;
+let lcspGeneralized;
 
 function fillLineChartScatterPlot(data, group, cols) {
     let lscpContainer = document.getElementById("lscpContainer" + group);
@@ -569,12 +637,11 @@ function fillLineChartScatterPlot(data, group, cols) {
     let selectYAxisLCSP = document.getElementById("yAxisLCSP" + group);
     lscpContainer.innerHTML = "";
 
-    console.log(lscpContainer, group, data, cols);
+    // console.log(lscpContainer, group, data, cols);
     lcsp = new LineChartScatterPlot("lscpContainer" + group, data, cols);
 
     selectXAxisLCSP.value = lcsp.xAxis;
     selectYAxisLCSP.value = lcsp.yAxis;
-
 }
 
 // ************************* LINE CHART + SCATTER PLOT GENERALIZED *************************
@@ -588,8 +655,13 @@ function askLCSPGeneralizedData(group) {
 }
 
 function fillLineChartScatterPlotGeneralized(data, group, cols) {
-    let lscpContainer = document.getElementById("lscpGeneralizedContainer");
-    lscpContainer.innerHTML = "";
+    let lscpContainerGeneralized = document.getElementById("lscpGeneralizedContainer");
+    let selectXAxisLCSPGeneralized = document.getElementById("xAxisLCSPGeneralized" + group);
+    let selectYAxisLCSPGeneralized = document.getElementById("yAxisLCSPGeneralized" + group);
+    lscpContainerGeneralized.innerHTML = "";
 
-    lcsp = new LineChartScatterPlotGeneralized("lscpGeneralizedContainer", data, cols);
+    lcspGeneralized = new LineChartScatterPlotGeneralized("lscpGeneralizedContainer", data, cols);
+
+    selectXAxisLCSPGeneralized.value = lcspGeneralized.xAxis;
+    selectYAxisLCSPGeneralized.value = lcspGeneralized.yAxis;
 }

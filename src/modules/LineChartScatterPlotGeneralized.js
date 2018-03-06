@@ -4,7 +4,9 @@ const defaultOptions = {
     opacity: 0.5,
     colorScatter: "orange",
     width: 800,
-    height: 400
+    height: 400,
+    widthSc: 600,
+    heightSc: 350
 };
 
 class LineChartScatterPlotGeneralized {
@@ -18,7 +20,9 @@ class LineChartScatterPlotGeneralized {
         this.colorScatter = opts.colorScatter;
         this.margin = {top: 20, right: 50, bottom: 50, left: 50};
         this.width = opts.width - this.margin.left - this.margin.right;
+        this.widthSc = opts.widthSc - this.margin.left - this.margin.right;
         this.height = opts.height - this.margin.top - this.margin.bottom;
+        this.heightSc = opts.heightSc - this.margin.top - this.margin.bottom;
 
         this.step = 5;
 
@@ -46,7 +50,9 @@ class LineChartScatterPlotGeneralized {
 
     fillLCSP(data) {
         let width = this.width;
+        let widthSc = this.widthSc;
         let height = this.height;
+        let heightSc = this.heightSc;
         let margin = this.margin;
         let traits = this.traits;
 
@@ -69,6 +75,10 @@ class LineChartScatterPlotGeneralized {
         let yRight = d3.scaleLinear().range([height, 0]);
 
         this.x = x;
+
+        // set the ranges
+        let xSc = d3.scaleLinear().range([0, widthSc]);
+        let ySc = d3.scaleLinear().range([heightSc, 0]);
 
         // LINE CHART
         // append the svg object to the body of the page
@@ -97,6 +107,28 @@ class LineChartScatterPlotGeneralized {
 
         svg.call(zoom).transition()
             .duration(1500);
+
+        // SCATTER PLOT
+        // append the svg object to the body of the page
+        // appends a 'group' element to 'svg'
+        // moves the 'group' element to the top left margin
+        let svgSc = this.container.append("svg")
+            .attr("class", "svgTemp")
+            .attr("width", widthSc + margin.left + margin.right)
+            .attr("height", heightSc + margin.top + margin.bottom)
+            .attr("transform",
+                "translate(" + 200 + "," + 0 + ")");
+
+        svgSc.append("defs").append("clipPath")
+            .attr("id", "clip")
+            .append("rect")
+            .attr("width", widthSc)
+            .attr("height", heightSc);
+
+        let contextSc = svgSc.append("g")
+            .attr("id", "ctxSc")
+            .attr("transform",
+                "translate(" + margin.left + "," + margin.top + ")");
 
         // format the data
         data.forEach(function (dd) {
@@ -201,6 +233,8 @@ class LineChartScatterPlotGeneralized {
             d3.select(d.legend).classed("overLegend", true);
             d.line1.parentNode.appendChild(d.line1);
             d.line2.parentNode.appendChild(d.line2);
+
+            drawScatterPlot(d);
         }
 
         function mouseout(d) {
@@ -221,6 +255,7 @@ class LineChartScatterPlotGeneralized {
                 d.legend = this;
                 return d.data[0].idxFile;
             })
+            .on("click", drawScatterPlot)
             .on("mouseover", mouseover)
             .on("mouseout", mouseout);
 
@@ -294,6 +329,101 @@ class LineChartScatterPlotGeneralized {
                 return valueline2(d.data);
             });
             svgXAxis.call(xAxis.scale(xt));
+        }
+
+        // GRIDS
+        // gridlines in x axis function
+        function make_x_gridlines(x0) {
+            return d3.axisBottom(x0)
+                .ticks(5)
+        }
+
+        // gridlines in y axis function
+        function make_y_gridlines(y0) {
+            return d3.axisLeft(y0)
+                .ticks(5)
+        }
+
+        function drawScatterPlot(sp) {
+            console.log("DRAW SCATTER PLOT");
+            console.log(sp);
+
+            document.getElementById("ctxSc").innerHTML = "";
+
+            let data = sp.data;
+
+            // SCATTER PLOT
+            // Scale the range of the data
+            xSc.domain([d3.min(data, function (d) {
+                return d[traits[0]];
+            }), d3.max(data, function (d) {
+                return d[traits[0]];
+            })]);
+            ySc.domain([d3.min(data, function (d) {
+                return d[traits[1]];
+            }), d3.max(data, function (d) {
+                return d[traits[1]];
+            })]);
+
+            // SCATTER PLOT
+            // Add the X Axis
+            contextSc.append("g")
+                .attr("transform", "translate(0," + heightSc + ")")
+                .attr("class", "firstAxis")
+                .call(d3.axisBottom(xSc));
+
+            // add the X gridlines
+            contextSc.append("g")
+                .attr("class", "grid")
+                .attr("transform", "translate(0," + heightSc + ")")
+                .call(make_x_gridlines(xSc)
+                    .tickSize(-heightSc)
+                    .tickFormat("")
+                );
+
+            // text label for the x axis
+            contextSc.append("text")
+                .attr("transform",
+                    "translate(" + (widthSc / 2) + " ," +
+                    (heightSc + margin.top + 20) + ")")
+                .style("text-anchor", "middle")
+                .attr("class", "firstLabel")
+                .text(traits[0]);
+
+            // Add the Y Axis
+            contextSc.append("g")
+                .attr("class", "secondAxis")
+                .call(d3.axisLeft(ySc));
+
+            // add the Y gridlines
+            contextSc.append("g")
+                .attr("class", "grid")
+                .call(make_y_gridlines(ySc)
+                    .tickSize(-widthSc)
+                    .tickFormat("")
+                );
+
+            // text label for the y axis
+            contextSc.append("text")
+                .attr("transform", "rotate(-90)")
+                .attr("y", 0 - margin.left)
+                .attr("x", 0 - (heightSc / 2))
+                .attr("dy", "1em")
+                .style("text-anchor", "middle")
+                .attr("class", "secondLabel")
+                .text(traits[1]);
+
+            let circles = contextSc.selectAll("circle")
+                .data(data)
+                .enter().append("circle")
+                .attr("cx", function (d) {
+                    return xSc(d[traits[0]]);
+                })
+                .attr("cy", function (d) {
+                    return ySc(d[traits[1]]);
+                })
+                .attr("r", 4)
+                .attr("fill", "orange");
         }
 
     }

@@ -165,6 +165,7 @@ class LineChartScatterPlotGeneralized {
             .selectAll("path")
             .data(data)
             .enter().append("path")
+            .attr("clip-path", "url(#clipG)")
             .attr("d", function (d) {
                 d.line1 = this;
                 return valueline(d.data);
@@ -177,6 +178,7 @@ class LineChartScatterPlotGeneralized {
             .selectAll("path")
             .data(data)
             .enter().append("path")
+            .attr("clip-path", "url(#clipG)")
             .attr("d", function (d) {
                 d.line2 = this;
                 return valueline2(d.data);

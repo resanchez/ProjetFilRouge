@@ -23,19 +23,17 @@ class LineChartScatterPlotGeneralized {
         this.step = 5;
 
         this.traits = cols;
-        this.instanciateSupport();
+        this.instantiateSupport();
         this.fillLCSP(this.data);
     }
 
-    instanciateSupport() {
+    instantiateSupport() {
         console.log(this);
 
         this.container = this.div.append("div")
             .attr("class", "lcsp")
             .style("width", this.width + this.margin.left + this.margin.right + "px")
             .style("height", this.height + this.margin.top + this.margin.bottom + "px");
-
-
     }
 
     fillLCSP(data) {
@@ -52,7 +50,6 @@ class LineChartScatterPlotGeneralized {
 
         // parse the date / time
         let parseTime = d3.timeParse("%Y-%m-%d %H:%M:%S");
-        let formatTime = d3.timeFormat("%H:%M:%S");
 
         for (let d of data) {
             d["date_time"] = parseTime(d["date_time"]);
@@ -64,19 +61,6 @@ class LineChartScatterPlotGeneralized {
         let yRight = d3.scaleLinear().range([height, 0]);
 
         this.x = x;
-
-        // GRIDS
-        // gridlines in x axis function
-        function make_x_gridlines(x0) {
-            return d3.axisBottom(x0)
-                .ticks(5)
-        }
-
-        // gridlines in y axis function
-        function make_y_gridlines(y0) {
-            return d3.axisLeft(y0)
-                .ticks(5)
-        }
 
         // LINE CHART
         // append the svg object to the body of the page
@@ -95,7 +79,7 @@ class LineChartScatterPlotGeneralized {
             .attr("width", width)
             .attr("height", height);
 
-        let contextBack = svg.append("g")
+        svg.append("g")
             .attr("transform",
                 "translate(" + margin.left + "," + margin.top + ")");
 
@@ -117,7 +101,6 @@ class LineChartScatterPlotGeneralized {
 
         // LINE CHART
         // Scale the range of the data
-
         x.domain([
             d3.min(data, function (f) {
                 return d3.min(f.data, function (d) {
@@ -215,7 +198,7 @@ class LineChartScatterPlotGeneralized {
             d3.select(d.line2).classed("overFlight", false);
             d3.select(d.legend).classed("overLegend", false);
         }
-        
+
         context.selectAll("text")
             .data(data)
             .enter().append("text")
@@ -231,7 +214,6 @@ class LineChartScatterPlotGeneralized {
             .on("mouseover", mouseover)
             .on("mouseout", mouseout);
 
-        // let xAxis = d3.axisBottom(x).tickFormat(d3.timeFormat("%H:%M:%S"))
         let xAxis = d3.axisBottom(x).ticks(5);
 
         // Add the X Axis

@@ -8,8 +8,8 @@ from twisted.web.server import Site
 from twisted.internet import reactor
 from autobahn.twisted.websocket import WebSocketServerProtocol
 import json
-# from preprocessing import *
-from src.preprocessing import *
+from preprocessing import *
+# from src.preprocessing import *
 
 functions = {'addSelectedFiles': add_selected_files, 'getLCSPData': get_lc_sp_data,
              'getPCData': get_pc_data, 'deleteFile': delete_file, 'getLCSPGeneralizedData': get_lc_sp_generalized_data}

@@ -597,8 +597,12 @@ drawFromSelection.addEventListener("click", function () {
 });
 
 function askPCDataAll() {
-    askPCData(0);
-    askPCData(1);
+    if(state[0].files.length) {
+        askPCData(0);
+    }
+    if(state[1].files.length) {
+        askPCData(1);
+    }
 }
 
 function askPCData(group) {
@@ -612,15 +616,26 @@ function askPCData(group) {
 let pc;
 
 function fillParallelCoordinates(data, group, cols) {
-    let pcContainer = document.getElementById("pcContainer" + group);
-    pcContainer.innerHTML = "";
-    pc = new ParallelCoords("pcContainer" + group, data);
+    document.getElementById("pcContainer" + group).innerHTML = "";
+    document.getElementById("pcContainer").innerHTML = "";
+    if(state[0].files.length && state[1].files.length) {
+        pc = new ParallelCoords("pcContainer" + group, data);
+    } else {
+        pc = new ParallelCoords("pcContainer", data, {
+            width: 1000,
+            height: 600
+        });
+    }
 }
 
 // ************************* LINE CHART + SCATTER PLOT *************************
 function askLCSPDataAll() {
-    askLCSPData(0);
-    askLCSPData(1);
+    if(state[0].files.length) {
+        askLCSPData(0);
+    }
+    if(state[1].files.length) {
+        askLCSPData(1);
+    }
 }
 
 function askLCSPData(group) {
@@ -632,13 +647,20 @@ let lcsp;
 let lcspGeneralized;
 
 function fillLineChartScatterPlot(data, group, cols) {
-    let lscpContainer = document.getElementById("lscpContainer" + group);
+    document.getElementById("lscpContainer" + group).innerHTML = "";
+    document.getElementById("lcspDisplay").innerHTML = "";
+    if(state[0].files.length && state[1].files.length) {
+        lcsp = new LineChartScatterPlot("lscpContainer" + group, data, cols);
+    } else {
+        lcsp = new LineChartScatterPlot("lcspDisplay", data, cols, {
+            width: 800,
+            height: 350
+        });
+    }
+    console.log("xAxisLCSP" + group);
     let selectXAxisLCSP = document.getElementById("xAxisLCSP" + group);
     let selectYAxisLCSP = document.getElementById("yAxisLCSP" + group);
-    lscpContainer.innerHTML = "";
 
-    // console.log(lscpContainer, group, data, cols);
-    lcsp = new LineChartScatterPlot("lscpContainer" + group, data, cols);
 
     selectXAxisLCSP.value = lcsp.xAxis;
     selectYAxisLCSP.value = lcsp.yAxis;

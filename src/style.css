@@ -187,7 +187,7 @@
     /*height: 100%;*/
 /*}*/
 
-#lcspDisplay {
+#lcspDisplayGroup {
     display: grid;
     grid-template-columns: 50% auto;
     grid-column-gap: 5px;

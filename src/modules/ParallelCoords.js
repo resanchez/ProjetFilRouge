@@ -6,14 +6,12 @@ const defaultOptions = {
     filterAxis: true,
     swapAxis: false,
     opacity: 0.5,
-    color: "lime",
+    colorAxis: "phase_no",
     width: 1000,
     height: 300,
     lineWidth: 1.5
 };
 
-const color = d3.scaleOrdinal()
-    .range(["#5DA5B3", "#D58323", "#DD6CA7", "#54AF52", "#8C92E8", "#E15E5A", "#725D82", "#776327", "#50AB84", "#954D56", "#AB9C27", "#517C3F", "#9D5130", "#357468", "#5E9ACF", "#C47DCB", "#7D9E33", "#DB7F85", "#BA89AD", "#4C6C86", "#B59248", "#D8597D", "#944F7E", "#D67D4B", "#8F86C2"]);
 
 
 class ParallelCoords {
@@ -27,7 +25,7 @@ class ParallelCoords {
         this.filterAxis = opts.filterAxis;
         this.swapAxis = opts.swapAxis;
         this.opacity = opts.opacity;
-        this.color = opts.color;
+        this.colorAxis = opts.colorAxis;
         console.log(this);
         this.margin = {top: 50, right: 100, bottom: 20, left: 100};
         this.width = opts.width - this.margin.left - this.margin.right;
@@ -38,6 +36,7 @@ class ParallelCoords {
     }
 
     instantiateSupport() {
+
         let that = this;
         let devicePixelRatio = window.devicePixelRatio || 1;
         // let dimensions = this.dimensions;
@@ -49,6 +48,7 @@ class ParallelCoords {
 
         let data = this.data;
         data = d3.shuffle(data);
+        that.selected = data;
 
         let parseTime = d3.timeParse("%Y-%m-%d %H:%M:%S");
         let formatTime = d3.timeFormat("%H:%M:%S");
@@ -289,6 +289,20 @@ class ParallelCoords {
             dim.scale.domain(dim.domain);
         });
 
+        const color1 = d3.scaleOrdinal()
+            .range(["#5DA5B3", "#D58323", "#DD6CA7", "#54AF52", "#8C92E8", "#E15E5A", "#725D82", "#776327", "#50AB84", "#954D56", "#AB9C27", "#517C3F", "#9D5130", "#357468", "#5E9ACF", "#C47DCB", "#7D9E33", "#DB7F85", "#BA89AD", "#4C6C86", "#B59248", "#D8597D", "#944F7E", "#D67D4B", "#8F86C2"]);
+
+        const color2 = d3.scaleLinear()
+            .domain(d3.extent(data, function(d) { return d[that.colorAxis]; }))
+            .range(['mediumturquoise', 'hotpink'])
+            .interpolate(d3.interpolateHcl);
+
+        let color = color1;
+
+        if(that.colorAxis !== "phase_no") {
+            color = color2;
+        }
+
         let render = renderQueue(draw).rate(150);
         ctx.clearRect(0, 0, width, height);
         // ctx.globalAlpha = 1;
@@ -301,7 +315,18 @@ class ParallelCoords {
                 let renderAxis = "axis" in d
                     ? d.axis.scale(d.scale)  // custom axis
                     : yAxis.scale(d.scale);  // default axis
-                d3.select(this).call(renderAxis);
+                d3.select(this).call(renderAxis)
+                    .on("click", function(d) {
+                        ctx.clearRect(0, 0, width, height);
+                        that.colorAxis = d.key;
+                        color = color1;
+                        if(that.colorAxis !== "phase_no") {
+                            color = color2;
+                            color.domain(d3.extent(data, function(d) { return d[that.colorAxis]; }))
+                        }
+                        render.invalidate();
+                        render(that.selected);
+                    });
             })
             .append("text")
             .attr("class", "title")
@@ -325,7 +350,9 @@ class ParallelCoords {
             .attr("x", -8)
             .attr("width", 16);
 
-        d3.selectAll(".axis.phase_no .tick text")
+
+
+        d3.selectAll(".axis." + that.colorAxis +" .tick text")
             .style("fill", color);
 
         // output.text(d3.tsvFormat(data.slice(0,24)));
@@ -345,7 +372,7 @@ class ParallelCoords {
         }
 
         function draw(d) {
-            ctx.strokeStyle = color(d.phase_no);
+            ctx.strokeStyle = color(d[that.colorAxis]);
             ctx.beginPath();
             let coords = project(d);
             coords.forEach(function (p, i) {
@@ -449,6 +476,7 @@ class ParallelCoords {
             ctx.clearRect(0, 0, width, height);
             // ctx.globalAlpha = 1;
             ctx.globalAlpha = d3.min([0.85 / Math.pow(selected.length, 0.3), 1]);
+            that.selected = selected;
             render(selected);
 
             // output.text(d3.tsvFormat(selected.slice(0, 24)));

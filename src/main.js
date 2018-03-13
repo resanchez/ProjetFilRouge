@@ -408,6 +408,38 @@ function setupTabs() {
     });
 }
 
+let orders = {
+    name: {
+        order: 1,
+        compare: function(a, b) {
+            return orders.name.order * a.name.localeCompare(b.name);
+        }
+    },
+    size: {
+        order: 1,
+        compare: function(a, b) {
+            return orders.size.order * (a.size - b.size);
+        }
+    },
+    type: {
+        order: 1,
+        compare: function(a, b) {
+            return orders.type.order * a.type.localeCompare(b.type);
+        }
+    },
+    lastModifiedDate: {
+        order: 1,
+        compare: function(a, b) {
+            if (a.lastModifiedDate.getTime() === b.lastModifiedDate.getTime()) {
+                return 0;
+            } else {
+                let val = a.lastModifiedDate < b.lastModifiedDate ? -1 : 1;
+                return orders.lastModifiedDate.order * val;
+            }
+        }
+    },
+};
+
 function setupListeners() {
     let importFolder = document.getElementById("import");
     let table = document.getElementById("fileList");
@@ -417,7 +449,11 @@ function setupListeners() {
 
     importFolder.addEventListener("change", function (ev) {
         let files = ev.path[0].files;
-        fillFileList(files, table);
+        let fs = [];
+        for (let f of files) {
+           fs.push(f);
+        }
+        fillFileList(fs, table, "type");
     });
 
     addSelectedFiles.addEventListener("click", function (ev) {
@@ -525,7 +561,11 @@ function updateSelectedFilesList(file, val, isShifted) {
     }
 }
 
-function fillFileList(files, table) {
+function fillFileList(files, table, key) {
+    console.log(files);
+    console.time('sort');
+    files.sort(orders[key].compare);
+    console.timeEnd('sort');
     let oldTbody = table.querySelector("tbody");
     if (oldTbody) {
         oldTbody.parentElement.removeChild(oldTbody);
@@ -619,11 +659,14 @@ function fillParallelCoordinates(data, group, cols) {
     document.getElementById("pcContainer" + group).innerHTML = "";
     document.getElementById("pcContainer").innerHTML = "";
     if(state[0].files.length && state[1].files.length) {
-        pc = new ParallelCoords("pcContainer" + group, data);
+        pc = new ParallelCoords("pcContainer" + group, data, {
+            colorAxis: "torque_1"
+        });
     } else {
         pc = new ParallelCoords("pcContainer", data, {
             width: 1000,
-            height: 600
+            height: 600,
+            colorAxis: "torque_1"
         });
     }
 }

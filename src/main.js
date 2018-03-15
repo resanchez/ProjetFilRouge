@@ -229,6 +229,8 @@ function updateUI(data) {
     state[data.group].files = data.files;
     state[data.group].columns = data.columns;
 
+    console.log(data.files);
+
     let selectFileLCSP = document.getElementById("selectFileLCSP" + data.group);
     let selectXAxisLCSP = document.getElementById("xAxisLCSP" + data.group);
     let selectYAxisLCSP = document.getElementById("yAxisLCSP" + data.group);
@@ -252,6 +254,33 @@ function updateUI(data) {
         li.appendChild(del);
         del.addEventListener("click", function () {
             sendRequest("deleteFile", f, data.group);
+            console.log({listSelectedFiles1, listSelectedFiles2, f});
+            let idx = -1;
+            // TODO - trop sale
+            for (let i = 0, len = listSelectedFiles1.length; i < len; i++) {
+                if (listSelectedFiles1[i].name === f) {
+                    idx = i;
+                    break;
+                }
+            }
+            // let idx = listSelectedFiles1.indexOf(f);
+            if (idx !== -1) {
+                listSelectedFiles1.splice(idx, 1);
+            } else {
+                // TODO - trop sale
+                for (let i = 0, len = listSelectedFiles2.length; i < len; i++) {
+                    if (listSelectedFiles2[i].name === f) {
+                        idx = i;
+                        break;
+                    }
+                }
+                // let idx = listSelectedFiles2.indexOf(f);
+                if (idx !== -1) {
+                    listSelectedFiles2.splice(idx, 1);
+                }
+            }
+            // let liToRM = filesToLi[f];
+            // displaySelectedFiles.removeChild(liToRM);
         });
         addedFilesList.appendChild(li);
 
@@ -411,25 +440,25 @@ function setupTabs() {
 let orders = {
     name: {
         order: 1,
-        compare: function(a, b) {
+        compare: function (a, b) {
             return orders.name.order * a.name.localeCompare(b.name);
         }
     },
     size: {
         order: 1,
-        compare: function(a, b) {
+        compare: function (a, b) {
             return orders.size.order * (a.size - b.size);
         }
     },
     type: {
         order: 1,
-        compare: function(a, b) {
+        compare: function (a, b) {
             return orders.type.order * a.type.localeCompare(b.type);
         }
     },
     lastModifiedDate: {
         order: 1,
-        compare: function(a, b) {
+        compare: function (a, b) {
             if (a.lastModifiedDate.getTime() === b.lastModifiedDate.getTime()) {
                 return 0;
             } else {
@@ -447,19 +476,49 @@ function setupListeners() {
     displayAddedFiles = document.getElementById("addedFiles");
     let addSelectedFiles = document.getElementById("addSelectedFiles");
 
+    // ORDERING VARIABLES
+    let name = document.getElementById("name");
+    let type = document.getElementById("type");
+    let size = document.getElementById("size");
+    let lastModifiedDate = document.getElementById("lastModifiedDate");
+
+    let fs = [];
+
     importFolder.addEventListener("change", function (ev) {
         let files = ev.path[0].files;
-        let fs = [];
         for (let f of files) {
-           fs.push(f);
+            fs.push(f);
         }
+        fillFileList(fs, table, "name");
+    });
+
+    // Order by name
+    name.addEventListener("click", function (ev) {
+        fillFileList(fs, table, "name");
+    });
+
+    // Order by file type
+    type.addEventListener("click", function (ev) {
         fillFileList(fs, table, "type");
+    });
+
+    // Order by size
+    size.addEventListener("click", function (ev) {
+        fillFileList(fs, table, "size");
+    });
+
+    // Order by last modified date
+    lastModifiedDate.addEventListener("click", function (ev) {
+        fillFileList(fs, table, "lastModifiedDate");
     });
 
     addSelectedFiles.addEventListener("click", function (ev) {
         readAndSendSelectedFiles(listSelectedFiles1, 0);
         readAndSendSelectedFiles(listSelectedFiles2, 1);
     });
+
+    // SEARCH FILES
+    searchFiles(fs);
 }
 
 function setUpPCOptions() {
@@ -618,6 +677,26 @@ function fillFileList(files, table, key) {
     }
 }
 
+function searchFiles(fs) {
+    let searchFiles = document.getElementById("searchFiles");
+    let table = document.getElementById("fileList");
+
+    searchFiles.addEventListener("input", function (ev) {
+        let matches = [];
+        let search = searchFiles.value.toString();
+        console.log(search);
+
+        for (let file of fs) {
+            if (file["name"].includes(search)) {
+                matches.push(file);
+            }
+        }
+        console.log(matches);
+        fillFileList(matches, table, "name");
+    });
+
+}
+
 
 // ************************* PARALLEL COORDINATES *************************
 let drawFromSelection = document.getElementById("drawFromSelection");
@@ -637,10 +716,10 @@ drawFromSelection.addEventListener("click", function () {
 });
 
 function askPCDataAll() {
-    if(state[0].files.length) {
+    if (state[0].files.length) {
         askPCData(0);
     }
-    if(state[1].files.length) {
+    if (state[1].files.length) {
         askPCData(1);
     }
 }
@@ -658,7 +737,7 @@ let pc;
 function fillParallelCoordinates(data, group, cols) {
     document.getElementById("pcContainer" + group).innerHTML = "";
     document.getElementById("pcContainer").innerHTML = "";
-    if(state[0].files.length && state[1].files.length) {
+    if (state[0].files.length && state[1].files.length) {
         pc = new ParallelCoords("pcContainer" + group, data, {
             colorAxis: "torque_1"
         });
@@ -673,10 +752,10 @@ function fillParallelCoordinates(data, group, cols) {
 
 // ************************* LINE CHART + SCATTER PLOT *************************
 function askLCSPDataAll() {
-    if(state[0].files.length) {
+    if (state[0].files.length) {
         askLCSPData(0);
     }
-    if(state[1].files.length) {
+    if (state[1].files.length) {
         askLCSPData(1);
     }
 }
@@ -692,7 +771,7 @@ let lcspGeneralized;
 function fillLineChartScatterPlot(data, group, cols) {
     document.getElementById("lscpContainer" + group).innerHTML = "";
     document.getElementById("lcspDisplay").innerHTML = "";
-    if(state[0].files.length && state[1].files.length) {
+    if (state[0].files.length && state[1].files.length) {
         lcsp = new LineChartScatterPlot("lscpContainer" + group, data, cols);
     } else {
         lcsp = new LineChartScatterPlot("lcspDisplay", data, cols, {

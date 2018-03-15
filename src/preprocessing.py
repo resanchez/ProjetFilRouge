@@ -50,13 +50,12 @@ def add_selected_files0(data, args):
         cols = d.columns
         cols = cols.map(lambda x: x.replace(' ', '_').replace('.', '') if isinstance(x, (bytes, str)) else x)
         d.columns = cols
-        print(args, len(args))
         frames = [df0, d]
         df0 = pd.concat(frames).drop_duplicates().reset_index(drop=True)
 
         variables0["files"] = list(df0["idxFile"].unique())
         variables0["columns"] = list(df0.columns.values)
-        print(df0.dtypes)
+        # print(df0.dtypes)
     else:
         variables0["files"] = []
         variables0["columns"] = []
@@ -76,13 +75,15 @@ def add_selected_files1(data, args):
         cols = d.columns
         cols = cols.map(lambda x: x.replace(' ', '_').replace('.', '') if isinstance(x, (bytes, str)) else x)
         d.columns = cols
-        print(args, len(args))
         frames = [df1, d]
         df1 = pd.concat(frames).drop_duplicates().reset_index(drop=True)
+        # debug_df()
+        # print(list(d["idxFile"].unique()))
 
         variables1["files"] = list(df1["idxFile"].unique())
         variables1["columns"] = list(df1.columns.values)
-        print(df1.dtypes)
+        # print(df1.dtypes)
+        # print(list(df1["idxFile"].unique()))
     else:
         variables1["files"] = []
         variables1["columns"] = []
@@ -177,32 +178,45 @@ def get_lc_sp_generalized_data(data, group, args):
 
 
 def delete_file(data, group, args):
-    global df0
-    global df1
-
     if group == 0:
-        df0 = df0.loc[df0["idxFile"] != data]
-
-        if not df0.empty:
-            variables0["files"] = list(df0["idxFile"].unique())
-            variables0["columns"] = list(df0.columns.values)
-        else:
-            variables0["files"] = []
-            variables0["columns"] = []
-
-        return variables0
-
+        return delete_file0(data, args)
     elif group == 1:
-        df1 = df1.loc[df1["idxFile"] != data]
+        return delete_file1(data, args)
 
-        if not df1.empty:
-            variables1["files"] = list(df1["idxFile"].unique())
-            variables1["columns"] = list(df1.columns.values)
-        else:
-            variables1["files"] = []
-            variables1["columns"] = []
 
-        return variables1
+def delete_file0(data, args):
+    global df0
+    df0 = df0.loc[df0["idxFile"] != data]
+
+    if not df0.empty:
+        variables0["files"] = list(df0["idxFile"].unique())
+        variables0["columns"] = list(df0.columns.values)
+    else:
+        variables0["files"] = []
+        variables0["columns"] = []
+
+    return variables0
+
+
+def delete_file1(data, args):
+    global df1
+    df = df1[df1["idxFile"] == data]
+    list_to_drop = df.index.values
+    df1.drop(list_to_drop, inplace=True)
+    # debug_df()
+
+    if not df1.empty:
+        variables1["files"] = list(df1["idxFile"].unique())
+        variables1["columns"] = list(df1.columns.values)
+    else:
+        variables1["files"] = []
+        variables1["columns"] = []
+
+    return variables1
+
+
+def debug_df():
+    print(list(df1["idxFile"].unique()))
 
 
 def create_df(json_str):

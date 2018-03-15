@@ -413,7 +413,7 @@ class LineChartScatterPlotGeneralized {
                 .attr("class", "secondLabel")
                 .text(traits[1]);
 
-            let circles = contextSc.selectAll("circle")
+            contextSc.selectAll("circle")
                 .data(data)
                 .enter().append("circle")
                 .attr("cx", function (d) {

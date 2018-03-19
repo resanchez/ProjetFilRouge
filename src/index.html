@@ -11,6 +11,7 @@
         <button id="drawParallelCoordinatesTab" class="tablinks">Parallel Coordinates</button>
         <button id="drawLineChartScatterPlotTab" class="tablinks">LineChart & ScatterPlot</button>
         <button id="drawLineChartScatterPlotGeneralizedTab" class="tablinks">Generalized LineChart & ScatterPlot</button>
+        <button id="drawScatterPlotGeneralizedTab" class="tablinks">Generalized ScatterPlot</button>
     </div>
     <div id="loaderDiv">
         <div class="Aligner-item Aligner-item--top">
@@ -132,7 +133,23 @@
         <button id="openSideNavLCSPGeneralized">Options</button>
 
         <div id="lcspGeneralizedDisplay">
-            <div id="lscpGeneralizedContainer"></div>
+            <div id="lcspGeneralizedContainer"></div>
+            <!--<div id="lscpAllContainer1"></div>-->
+        </div>
+    </div>
+
+    <div id="drawScatterPlotGeneralized" class="tabcontent">
+        <div id="mySidenavSPGeneralized" class="sidenav">
+            <a href="javascript:void(0)" class="closebtn" id="closeNavSPGeneralized">&times;</a>
+            <a href="#">Columns selection</a>
+            <select id="xAxisSPGeneralized"></select>
+            <select id="yAxisSPGeneralized"></select>
+        </div>
+
+        <button id="openSideNavSPGeneralized">Options</button>
+
+        <div id="spGeneralizedDisplay">
+            <div id="spGeneralizedContainer"></div>
             <!--<div id="lscpAllContainer1"></div>-->
         </div>
     </div>

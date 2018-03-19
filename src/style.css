@@ -292,6 +292,23 @@ pre {
     overflow: auto;
 }
 
+/* SCATTER PLOT GENERALIZED */
+
+.spGeneralized {
+    display: block;
+}
+
+.spGeneralized svg,
+.spGeneralized canvas {
+    font: 10px sans-serif;
+    position: absolute;
+}
+
+.spGeneralized canvas {
+    opacity: 0.9;
+    pointer-events: none;
+}
+
 /* LINE CHART + SCATTER PLOT */
 
 .firstAxis text {

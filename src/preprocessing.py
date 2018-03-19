@@ -168,6 +168,14 @@ def get_lc_sp_generalized_data(data, group, args):
     return {"lcspGeneralizedData": create_dict(grouped), "group": group,
             "lcspGeneralizedColumns": [feature_x, feature_y]}
 
+def get_sp_generalized_data(data, group, args):
+    frames = [df0, df1]
+    df = pd.concat(frames).drop_duplicates().reset_index(drop=True)
+
+    return {"spGeneralizedData": create_dict(df),
+            "spGeneralizedFiles": list(df["idxFile"].unique()),
+            "spGeneralizedColumns": list(df.columns.values)}
+
 
 # def get_list_files(data, args):
 #     return list(df["idxFile"].unique())

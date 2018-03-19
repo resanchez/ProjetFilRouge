@@ -6,27 +6,50 @@ df1 = pd.DataFrame()
 variables0 = {"files": [], "columns": [], "group": 0}
 variables1 = {"files": [], "columns": [], "group": 1}
 
+# dtypes = {
+#     "altitude": np.float64,
+#     "date time": object,
+#     "flight time": np.float64,
+#     "fuel flow": np.float64,
+#     "fuel vol.": np.float64,
+#     "ground speed": np.float64,
+#     "idxFile": np.float64,
+#     "ind. air speed": np.float64,
+#     "n1 1": np.float64,
+#     "n2 1": np.float64,
+#     "nr": np.float64,
+#     "oat": np.float64,
+#     "oil pressure 1": np.float64,
+#     "oil temp. 1": np.float64,
+#     "phase_no": np.float64,
+#     "power": np.float64,
+#     "static pressure": np.float64,
+#     "take off switch": np.float64,
+#     "torque 1": np.float64,
+#     "tot 1": np.float64,
+# }
+
 dtypes = {
     "altitude": np.float64,
-    "date time": object,
-    "flight time": np.float64,
-    "fuel flow": np.float64,
-    "fuel vol.": np.float64,
-    "ground speed": np.float64,
+    "date_time": object,
+    "flight_time": np.float64,
+    "fuel_flow": np.float64,
+    "fuel_vol": np.float64,
+    "ground_speed": np.float64,
     "idxFile": np.float64,
-    "ind. air speed": np.float64,
-    "n1 1": np.float64,
-    "n2 1": np.float64,
+    "ind_air speed": np.float64,
+    "n1_1": np.float64,
+    "n2_1": np.float64,
     "nr": np.float64,
     "oat": np.float64,
-    "oil pressure 1": np.float64,
-    "oil temp. 1": np.float64,
+    "oil_pressure_1": np.float64,
+    "oil temp_1": np.float64,
     "phase_no": np.float64,
     "power": np.float64,
-    "static pressure": np.float64,
-    "take off switch": np.float64,
-    "torque 1": np.float64,
-    "tot 1": np.float64,
+    "static_pressure": np.float64,
+    "take_off_switch": np.float64,
+    "torque_1": np.float64,
+    "tot_1": np.float64,
 }
 
 
@@ -41,13 +64,14 @@ def add_selected_files(data, group, args):
 def add_selected_files0(data, args):
     global df0
 
-    d = pd.read_json(data, orient='records', dtype=dtypes)
+    d = pd.read_json(data, orient='records', dtype=dtypes, keep_default_dates=False)
     if not (df0.empty and d.empty):
         # marche pas
         # d.replace('', np.nan, regex=True)
         # d.fillna(method='ffill')
         # print(d["power"])
         cols = d.columns
+        print(df0.dtypes)
         cols = cols.map(lambda x: x.replace(' ', '_').replace('.', '') if isinstance(x, (bytes, str)) else x)
         d.columns = cols
         frames = [df0, d]
@@ -89,6 +113,11 @@ def add_selected_files1(data, args):
         variables1["columns"] = []
 
     return variables1
+
+
+def get_debug_data(data, group, args):
+    print(df0.dtypes)
+    return {"pcData": create_dict(df0)}
 
 
 def get_pc_data(data, group, args):

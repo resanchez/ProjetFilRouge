@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Test Indexed Database</title>
+</head>
+<body>
+    <input id="data" type="file">
+    <button id="launchTestWrite">Test Write</button>
+    <button id="launchTestRead">Test Read</button>
+
+
+    <div>
+        <ul>
+            <li>Write IDB : <span id="writeIDB"></span> ms</li>
+            <li>Write Server : <span id="writeServer"></span> ms</li>
+            <li>Read IDB : <span id="readIDB"></span> ms</li>
+            <li>Read Server : <span id="readServer"></span>ms</li>
+        </ul>
+    </div>
+    <script src="d3.min.js"></script>
+    <script src="test.js"></script>
+</body>
+</html>

@@ -5,13 +5,23 @@ const defaultOptions = {
     colorScatter: "orange",
     width: 600,
     height: 600,
+    pointSize: 2
+};
+
+const colorScales = {
+    "linear": d3.scaleLinear(),
+    "sqrt": d3.scaleSqrt(),
+    "pow": d3.scalePow().exponent(2),
+    "log": d3.scaleLog()
 };
 
 class ScatterPlotGeneralized {
-    constructor(id, data, options = {}) {
+    constructor(id, data, spFiles, options = {}) {
         this.divHTML = document.querySelector("#" + id);
         this.div = d3.select("#" + id);
         this.data = data;
+        this.spFiles = spFiles;
+        this.selectedFiles = Object.keys(spFiles);
         let opts = fillWithDefault(options, defaultOptions, false);
         console.log(opts);
         this.opacity = opts.opacity;
@@ -21,9 +31,8 @@ class ScatterPlotGeneralized {
         this.height = opts.height - this.margin.top - this.margin.bottom;
         this.innerHeight = this.height - 2;
         this.step = 5;
+        this.pointSize = opts.pointSize;
         this.traits = d3.keys(data[0]);
-        this._xAxis = this.traits[0];
-        this._yAxis = this.traits[1];
         let idx1 = this.traits.indexOf("date_time");
         if (idx1 > -1) {
             this.traits.splice(idx1, 1);
@@ -32,16 +41,29 @@ class ScatterPlotGeneralized {
         if (idx2 > -1) {
             this.traits.splice(idx2, 1);
         }
+        this._xAxis = this.traits[0];
+        this._yAxis = this.traits[1];
+        this._cAxis = this.traits[2];
+        this._colorScale = "linear";
         console.log(this.traits);
+        this.instantiateLi();
         this.instantiateSupport();
     }
 
     get xAxis() {
-        return this.traits[0];
+        return this._xAxis;
     }
 
     get yAxis() {
-        return this.traits[1];
+        return this._yAxis;
+    }
+
+    get cAxis() {
+        return this._cAxis;
+    }
+
+    get colorScale() {
+        return this._colorScale;
     }
 
     set xAxis(val) {
@@ -76,6 +98,62 @@ class ScatterPlotGeneralized {
         // TODO - Attention quand il y a selection
     }
 
+    set cAxis(val) {
+        console.log("cAxis", val);
+        this.render.invalidate();
+        this.ctx.clearRect(0, 0, this.width, this.height);
+        this._cAxis = val;
+        this.color = this.color1;
+        if (this._cAxis !== "phase_no") {
+            this.color = this.color2;
+            this.color.domain(d3.extent(this.data, (d) => {
+                return d[this._cAxis];
+            }))
+        }
+        this.data = this.data.sort((a, b) => {
+            return a[this._cAxis] - b[this._cAxis];
+        });
+        this.render(this.data);
+        // TODO - Attention quand il y a selection
+    }
+
+    set colorScale(val) {
+        console.log("colorScale", val);
+        this.render.invalidate();
+        this.ctx.clearRect(0, 0, this.width, this.height);
+        this._colorScale = val;
+        this.color = this.color1;
+        this.color2 = colorScales[this._colorScale]
+            .domain(d3.extent(this.data, (d) => {
+                return d[this._cAxis];
+            }))
+            .range(['mediumturquoise', 'hotpink'])
+            .interpolate(d3.interpolateHcl);
+        if (this._cAxis !== "phase_no") {
+            this.color = this.color2;
+        }
+        this.render(this.data);
+        // TODO - Attention quand il y a selection
+    }
+
+    instantiateLi() {
+        for (let k of Object.keys(this.spFiles)){
+            this.spFiles[k].addEventListener("click", (ev) => {
+                this.render.invalidate();
+                this.ctx.clearRect(0, 0, this.width, this.height);
+                let idx = this.selectedFiles.indexOf(k);
+                if (idx > -1) {
+                    this.selectedFiles.splice(idx, 1);
+                    this.spFiles[k].style.textDecoration = "line-through";
+                } else {
+                    this.selectedFiles.push(k);
+                    this.spFiles[k].style.textDecoration = "none";
+                }
+                this.render(this.data);
+            });
+        }
+    }
+
     instantiateSupport() {
         let that = this;
         let devicePixelRatio = window.devicePixelRatio || 1;
@@ -87,7 +165,10 @@ class ScatterPlotGeneralized {
         let innerHeight = this.innerHeight;
 
         let data = this.data;
-        data = d3.shuffle(data);
+        // data = d3.shuffle(data);
+        data = data.sort((a, b) => {
+            return a[this._cAxis] - b[this._cAxis];
+        });
         that.selected = data;
 
         this.container = this.div.append("div")
@@ -140,6 +221,23 @@ class ScatterPlotGeneralized {
         }), d3.max(data, function (d) {
             return d[that._yAxis];
         })]);
+
+        this.color1 = d3.scaleOrdinal()
+            .range(["#5DA5B3", "#D58323", "#DD6CA7", "#54AF52", "#8C92E8", "#E15E5A", "#725D82", "#776327", "#50AB84", "#954D56", "#AB9C27", "#517C3F", "#9D5130", "#357468", "#5E9ACF", "#C47DCB", "#7D9E33", "#DB7F85", "#BA89AD", "#4C6C86", "#B59248", "#D8597D", "#944F7E", "#D67D4B", "#8F86C2"]);
+
+        this.color2 = colorScales[this._colorScale]
+            .domain(d3.extent(data, function (d) {
+                return d[that._cAxis];
+            }))
+            .range(['mediumturquoise', 'hotpink'])
+            .interpolate(d3.interpolateHcl);
+
+        this.color = this.color1;
+
+        if (this._cAxis !== "phase_no") {
+            this.color = this.color2;
+        }
+
 
         let render = renderQueue(draw).rate(1000);
         this.render = render;
@@ -195,9 +293,60 @@ class ScatterPlotGeneralized {
             .text(that._yAxis);
 
         function draw(d) {
-            ctx.fillStyle = that.colorScatter;
-            ctx.fillRect(xSc(d[that._xAxis]), ySc(d[that._yAxis]), 2, 2);
+            if (that.selectedFiles.includes(d.idxFile)) {
+                // ctx.fillStyle = that.color(d[that._cAxis]);
+                ctx.strokeStyle = that.color(d[that._cAxis]);
+                ctx.beginPath();
+                ctx.ellipse(xSc(d[that._xAxis]), ySc(d[that._yAxis]) , 3, 3, 45 * Math.PI/180, 0, 2 * Math.PI);
+                ctx.stroke();
+            } else {
+                ctx.fillStyle = "lightgrey";
+                // ctx.fillStyle = that.color(d[that._cAxis]);
+                ctx.fillRect(xSc(d[that._xAxis]), ySc(d[that._yAxis]), that.pointSize, that.pointSize);
+            }
         }
+
+        let brushSc = d3.brush()
+            .extent([[0, 0], [width, height]])
+            .on("brush end", brush);
+
+        this.nodeBrushSc = svg.append("g")
+            .attr("class", "brush brushSc")
+            .call(brushSc);
+
+        function brush() {
+            console.log("brush end");
+            let selection = d3.event.selection || [0, width];
+            that.selection = selection;
+
+            console.log(selection);
+            let x0 = selection[0][0],
+                x1 = selection[1][0],
+                y0 = selection[0][1],
+                y1 = selection[1][1];
+
+            let selected = data.filter(function (d) {
+                let cx = xSc(d[that._xAxis]),
+                    cy = ySc(d[that._yAxis]);
+
+                return (x0 <= cx && cx <= x1 && y0 <= cy && cy <= y1);
+            });
+
+            that.selected = selected;
+            let files = new Set();
+            const reducer = (accumulator, currentValue) => accumulator.add(currentValue.idxFile);
+            selected.reduce(reducer, files);
+
+            for (let li of Object.values(that.spFiles)) {
+                li.style.color = "black";
+            }
+
+            for (let f of files){
+                that.spFiles[f].style.color = "crimson";
+            }
+            console.log(files);
+        }
+
         // PC line 407 stop
     }
 }

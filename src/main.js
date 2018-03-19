@@ -132,6 +132,8 @@ let selectYAxisLCSPGeneralized0 = document.getElementById("yAxisLCSPGeneralized0
 
 let selectXAxisSPGeneralized = document.getElementById("xAxisSPGeneralized");
 let selectYAxisSPGeneralized = document.getElementById("yAxisSPGeneralized");
+let selectCAxisSPGeneralized = document.getElementById("cAxisSPGeneralized");
+let selectColorScaleSPGeneralized = document.getElementById("colorScaleSPGeneralized");
 
 // PARALLEL COORD
 function getSelectedValues(select) {
@@ -214,6 +216,20 @@ selectYAxisSPGeneralized.addEventListener("change", function (ev) {
     let featureY = selectYAxisSPGeneralized.value;
     if (spGeneralized) {
         spGeneralized.yAxis = featureY;
+    }
+});
+
+selectCAxisSPGeneralized.addEventListener("change", function (ev) {
+    let featureC = selectCAxisSPGeneralized.value;
+    if (spGeneralized) {
+        spGeneralized.cAxis = featureC;
+    }
+});
+
+selectColorScaleSPGeneralized.addEventListener("change", function (ev) {
+    let featureC = selectColorScaleSPGeneralized.value;
+    if (spGeneralized) {
+        spGeneralized.colorScale = featureC;
     }
 });
 
@@ -388,11 +404,14 @@ function updateSPGeneralizedUI(data) {
 
     let selectXAxisSP = document.getElementById("xAxisSPGeneralized");
     let selectYAxisSP = document.getElementById("yAxisSPGeneralized");
+    let selectCAxisSP = document.getElementById("cAxisSPGeneralized");
     let xAxisSPValue = selectXAxisSP.value;
     let yAxisSPValue = selectYAxisSP.value;
+    let cAxisSPValue = selectCAxisSP.value;
 
     selectXAxisSP.innerHTML = "";
     selectYAxisSP.innerHTML = "";
+    selectCAxisSP.innerHTML = "";
 
     for (let c of state[data.group].columns) {
         if (c !== "date_time" && c !== "idxFile" && c !== "group") {
@@ -401,14 +420,19 @@ function updateSPGeneralizedUI(data) {
             optionX.value = c;
 
             let optionY = optionX.cloneNode(true);
+            let optionC = optionX.cloneNode(true);
 
             selectXAxisSP.appendChild(optionX);
             selectYAxisSP.appendChild(optionY);
+            selectCAxisSP.appendChild(optionC);
             if (c === xAxisSPValue && c) {
                 selectXAxisSP.value = xAxisSPValue;
             }
             if (c === yAxisSPValue && c) {
                 selectYAxisSP.value = yAxisSPValue;
+            }
+            if (c === cAxisSPValue && c) {
+                selectCAxisSP.value = cAxisSPValue;
             }
         }
     }
@@ -896,18 +920,34 @@ function askSPGeneralizedDataAll() {
 }
 
 function fillScatterPlotGeneralized(data, files, columns) {
-    console.warn("Implement fillScatterPlotGeneralized");
+    let spFiles = showSPFiles(files);
     // TODO - we don't need to replot unless we have added files
     // TODO - Implement this optim (flag)
     let spContainerGeneralized = document.getElementById("spGeneralizedContainer");
     let selectXAxisSPGeneralized = document.getElementById("xAxisSPGeneralized");
     let selectYAxisSPGeneralized = document.getElementById("yAxisSPGeneralized");
+    let selectCAxisSPGeneralized = document.getElementById("cAxisSPGeneralized");
+    let selectColorScaleSPGeneralized = document.getElementById("colorScaleSPGeneralized");
     spContainerGeneralized.innerHTML = "";
 
-    spGeneralized = new ScatterPlotGeneralized("spGeneralizedContainer", data);
+    spGeneralized = new ScatterPlotGeneralized("spGeneralizedContainer", data, spFiles);
 
     selectXAxisSPGeneralized.value = spGeneralized.xAxis;
     selectYAxisSPGeneralized.value = spGeneralized.yAxis;
+    selectCAxisSPGeneralized.value = spGeneralized.cAxis;
+    selectColorScaleSPGeneralized.value = spGeneralized.colorScale;
+}
 
 
+
+function showSPFiles(files) {
+    let spFiles = {};
+    let listFiles = document.getElementById("spFiles");
+    for (let file of files) {
+        let li = document.createElement("li");
+        li.innerHTML = file;
+        listFiles.appendChild(li);
+        spFiles[file] = li;
+    }
+    return spFiles;
 }

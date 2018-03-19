@@ -144,15 +144,38 @@
             <a href="#">Columns selection</a>
             <select id="xAxisSPGeneralized"></select>
             <select id="yAxisSPGeneralized"></select>
+
+            <a href="#">Color selection</a>
+            <select id="cAxisSPGeneralized"></select>
+
+            <a href="#">Color Scale selection</a>
+            <select id="colorScaleSPGeneralized">
+                <option value="linear">Linear</option>
+                <option value="sqrt">Square Root</option>
+                <option value="pow">Power</option>
+                <option value="log">Log</option>
+            </select>
         </div>
+        <div id="sptabcontainer">
+            <div id="sptableft">
+                <button id="openSideNavSPGeneralized">Options</button>
 
-        <button id="openSideNavSPGeneralized">Options</button>
+                <!--<div id="lscpAllContainer1"></div>-->
+                <div id="spGeneralizedDisplay">
+                    <div id="spGeneralizedContainer"></div>
+                </div>
+            </div>
+            <div id="sptabright">
+                <ul id="spFiles">
 
-        <div id="spGeneralizedDisplay">
-            <div id="spGeneralizedContainer"></div>
-            <!--<div id="lscpAllContainer1"></div>-->
+                </ul>
+            </div>
+            <div id="sptabrightdown">
+                Test
+            </div>
         </div>
     </div>
+
 
     <!--<script src="//d3js.org/d3.v4.min.js"></script>-->
     <script src="d3.min.js"></script>

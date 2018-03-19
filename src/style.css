@@ -152,6 +152,36 @@
     display: inline;
 }
 
+#sptabcontainer {
+    display: grid;
+    grid-template-columns: 75% auto;
+    grid-template-rows: 50% auto;
+}
+
+#sptableft {
+    grid-column-start: 1;
+    grid-column-end: 1;
+    grid-row-start: 1;
+    grid-row-end: 2;
+}
+
+#sptabright {
+    grid-column-start: 2;
+    grid-column-end: 2;
+    grid-row-start: 1;
+    grid-row-end: 1;
+    height: 100%;
+}
+
+#sptabrightdown {
+    grid-column-start: 2;
+    grid-column-end: 2;
+    grid-row-start: 2;
+    grid-row-end: 2;
+    background-color: crimson;
+    height: 100%;
+}
+
 #container {
     display: grid;
     grid-template-columns: 50% auto;

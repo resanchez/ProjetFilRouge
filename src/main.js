@@ -2,6 +2,7 @@
 import LineChartScatterPlot from "./modules/LineChartScatterPlot.js";
 import ParallelCoords from "./modules/ParallelCoords.js";
 import LineChartScatterPlotGeneralized from "./modules/LineChartScatterPlotGeneralized.js";
+import ScatterPlotGeneralized from "./modules/ScatterPlotGeneralized.js";
 
 let mySocket;
 
@@ -25,10 +26,12 @@ window.addEventListener("load", function () {
             updateUI(res.data);
             updatePCUI(res.data);
             updateGeneralizedUI(res.data);
+            updateSPGeneralizedUI(res.data);
         } else if (res.fct === "deleteFile") {
             updateUI(res.data);
             updatePCUI(res.data);
             updateGeneralizedUI(res.data);
+            updateSPGeneralizedUI(res.data);
         } else if (res.fct === "getLCSPData") {
             fillLineChartScatterPlot(res.data.lcspData, res.data.group, res.data.lcspColumns);
         } else if (res.fct === "getColumnsLCSP") {
@@ -36,8 +39,9 @@ window.addEventListener("load", function () {
         } else if (res.fct === "getPCData") {
             fillParallelCoordinates(res.data.pcData, res.data.group, res.data.pcColumns);
         } else if (res.fct === "getLCSPGeneralizedData") {
-            console.log(res.data.lcspGeneralizedData);
             fillLineChartScatterPlotGeneralized(res.data.lcspGeneralizedData, res.data.group, res.data.lcspGeneralizedColumns);
+        } else if (res.fct === "getSPGeneralizedData") {
+            fillScatterPlotGeneralized(res.data.spGeneralizedData, res.data.spGeneralizedFiles, res.data.spGeneralizedColumns);
         }
     };
 });
@@ -126,6 +130,9 @@ let selectYAxisLCSP1 = document.getElementById("yAxisLCSP1");
 let selectXAxisLCSPGeneralized0 = document.getElementById("xAxisLCSPGeneralized0");
 let selectYAxisLCSPGeneralized0 = document.getElementById("yAxisLCSPGeneralized0");
 
+let selectXAxisSPGeneralized = document.getElementById("xAxisSPGeneralized");
+let selectYAxisSPGeneralized = document.getElementById("yAxisSPGeneralized");
+
 // PARALLEL COORD
 function getSelectedValues(select) {
     return [...select.options].filter(option => option.selected).map(option => option.value);
@@ -193,6 +200,23 @@ selectYAxisLCSPGeneralized0.addEventListener("change", function (ev) {
     let featureY = selectYAxisLCSPGeneralized0.value;
     sendRequest("getLCSPGeneralizedData", {}, 0, featureX, featureY);
 });
+
+console.log(selectXAxisSPGeneralized);
+// SP Generalized
+selectXAxisSPGeneralized.addEventListener("change", function (ev) {
+    let featureX = selectXAxisSPGeneralized.value;
+    if (spGeneralized) {
+        spGeneralized.xAxis = featureX;
+    }
+});
+
+selectYAxisSPGeneralized.addEventListener("change", function (ev) {
+    let featureY = selectYAxisSPGeneralized.value;
+    if (spGeneralized) {
+        spGeneralized.yAxis = featureY;
+    }
+});
+
 
 // ************************* UPDATE UI FUNCTIONS *************************
 function updatePCUI(data) {
@@ -331,6 +355,7 @@ function updateGeneralizedUI(data) {
 
     selectXAxisLCSP.innerHTML = "";
     selectYAxisLCSP.innerHTML = "";
+
     // for (let f of state[data.group].files) {
     //     let option = document.createElement("option");
     //     option.innerHTML = f;
@@ -338,7 +363,7 @@ function updateGeneralizedUI(data) {
     // }
 
     for (let c of state[data.group].columns) {
-        if (c !== "flight_time" && c !== "idxFile" && c !== "group") {
+        if (c !== "date_time" && c !== "idxFile" && c !== "group") {
             let optionX = document.createElement("option");
             optionX.innerHTML = c;
             optionX.value = c;
@@ -357,6 +382,37 @@ function updateGeneralizedUI(data) {
     }
 }
 
+function updateSPGeneralizedUI(data) {
+    state[data.group].files = data.files;
+    state[data.group].columns = data.columns;
+
+    let selectXAxisSP = document.getElementById("xAxisSPGeneralized");
+    let selectYAxisSP = document.getElementById("yAxisSPGeneralized");
+    let xAxisSPValue = selectXAxisSP.value;
+    let yAxisSPValue = selectYAxisSP.value;
+
+    selectXAxisSP.innerHTML = "";
+    selectYAxisSP.innerHTML = "";
+
+    for (let c of state[data.group].columns) {
+        if (c !== "date_time" && c !== "idxFile" && c !== "group") {
+            let optionX = document.createElement("option");
+            optionX.innerHTML = c;
+            optionX.value = c;
+
+            let optionY = optionX.cloneNode(true);
+
+            selectXAxisSP.appendChild(optionX);
+            selectYAxisSP.appendChild(optionY);
+            if (c === xAxisSPValue && c) {
+                selectXAxisSP.value = xAxisSPValue;
+            }
+            if (c === yAxisSPValue && c) {
+                selectYAxisSP.value = yAxisSPValue;
+            }
+        }
+    }
+}
 
 function sendRequest(name, data, group, ...args) {
     showLoading();
@@ -409,6 +465,7 @@ function main() {
     setUpPCOptions();
     setUpOptions();
     setUpGeneralizedOptions();
+    setUpSPGeneralizedOptions();
 }
 
 function setupTabs() {
@@ -416,6 +473,7 @@ function setupTabs() {
     let drawParallelCoordinatesTab = document.getElementById("drawParallelCoordinatesTab");
     let drawLineChartScatterPlotTab = document.getElementById("drawLineChartScatterPlotTab");
     let drawLineChartScatterPlotGeneralizedTab = document.getElementById("drawLineChartScatterPlotGeneralizedTab");
+    let drawScatterPlotGeneralizedTab = document.getElementById("drawScatterPlotGeneralizedTab");
 
     addFilesTab.addEventListener("click", function (ev) {
         openCity(event, 'addFiles');
@@ -434,6 +492,11 @@ function setupTabs() {
     drawLineChartScatterPlotGeneralizedTab.addEventListener("click", function (ev) {
         openCity(event, 'drawLineChartScatterPlotGeneralized');
         askLCSPGeneralizedDataAll();
+    });
+
+    drawScatterPlotGeneralizedTab.addEventListener("click", function (ev) {
+        openCity(event, 'drawScatterPlotGeneralized');
+        askSPGeneralizedDataAll();
     });
 }
 
@@ -494,21 +557,25 @@ function setupListeners() {
 
     // Order by name
     name.addEventListener("click", function (ev) {
+        orders.name.order *= -1;
         fillFileList(fs, table, "name");
     });
 
     // Order by file type
     type.addEventListener("click", function (ev) {
+        orders.type.order *= -1;
         fillFileList(fs, table, "type");
     });
 
     // Order by size
     size.addEventListener("click", function (ev) {
+        orders.size.order *= -1;
         fillFileList(fs, table, "size");
     });
 
     // Order by last modified date
     lastModifiedDate.addEventListener("click", function (ev) {
+        orders.lastModifiedDate.order *= -1;
         fillFileList(fs, table, "lastModifiedDate");
     });
 
@@ -561,6 +628,18 @@ function setUpGeneralizedOptions() {
     });
 }
 
+function setUpSPGeneralizedOptions() {
+    let sideNav = document.getElementById("openSideNavSPGeneralized");
+    let closeNav = document.getElementById("closeNavSPGeneralized");
+
+    sideNav.addEventListener("click", function (ev) {
+        document.getElementById("mySidenavSPGeneralized").style.width = "250px";
+    });
+
+    closeNav.addEventListener("click", function (ev) {
+        document.getElementById("mySidenavSPGeneralized").style.width = "0";
+    });
+}
 
 function readAndSendSelectedFiles(files, id) {
     let dataAll = [];
@@ -767,6 +846,7 @@ function askLCSPData(group) {
 
 let lcsp;
 let lcspGeneralized;
+let spGeneralized;
 
 function fillLineChartScatterPlot(data, group, cols) {
     document.getElementById("lscpContainer" + group).innerHTML = "";
@@ -799,13 +879,35 @@ function askLCSPGeneralizedData(group) {
 }
 
 function fillLineChartScatterPlotGeneralized(data, group, cols) {
-    let lscpContainerGeneralized = document.getElementById("lscpGeneralizedContainer");
+    let lscpContainerGeneralized = document.getElementById("lcspGeneralizedContainer");
     let selectXAxisLCSPGeneralized = document.getElementById("xAxisLCSPGeneralized" + group);
     let selectYAxisLCSPGeneralized = document.getElementById("yAxisLCSPGeneralized" + group);
     lscpContainerGeneralized.innerHTML = "";
 
-    lcspGeneralized = new LineChartScatterPlotGeneralized("lscpGeneralizedContainer", data, cols);
+    lcspGeneralized = new LineChartScatterPlotGeneralized("lcspGeneralizedContainer", data, cols);
 
     selectXAxisLCSPGeneralized.value = lcspGeneralized.xAxis;
     selectYAxisLCSPGeneralized.value = lcspGeneralized.yAxis;
+}
+
+// ************************* SCATTER PLOT GENERALIZED *************************
+function askSPGeneralizedDataAll() {
+    sendRequest("getSPGeneralizedData", {});
+}
+
+function fillScatterPlotGeneralized(data, files, columns) {
+    console.warn("Implement fillScatterPlotGeneralized");
+    // TODO - we don't need to replot unless we have added files
+    // TODO - Implement this optim (flag)
+    let spContainerGeneralized = document.getElementById("spGeneralizedContainer");
+    let selectXAxisSPGeneralized = document.getElementById("xAxisSPGeneralized");
+    let selectYAxisSPGeneralized = document.getElementById("yAxisSPGeneralized");
+    spContainerGeneralized.innerHTML = "";
+
+    spGeneralized = new ScatterPlotGeneralized("spGeneralizedContainer", data);
+
+    selectXAxisSPGeneralized.value = spGeneralized.xAxis;
+    selectYAxisSPGeneralized.value = spGeneralized.yAxis;
+
+
 }

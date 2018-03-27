@@ -5,7 +5,8 @@ const defaultOptions = {
     colorScatter: "orange",
     width: 600,
     height: 600,
-    pointSize: 2
+    pointSize: 2,
+    showAnomaly: false
 };
 
 const colorScales = {
@@ -26,7 +27,8 @@ class ScatterPlotGeneralized {
         console.log(opts);
         this.opacity = opts.opacity;
         this.colorScatter = opts.colorScatter;
-        this.margin = {top: 0, right: 0, bottom: 50, left: 50};
+        this._showAnomaly = opts.showAnomaly;
+        this.margin = {top: 0, right: 20, bottom: 50, left: 50};
         this.width = opts.width - this.margin.left - this.margin.right;
         this.height = opts.height - this.margin.top - this.margin.bottom;
         this.innerHeight = this.height - 2;
@@ -64,6 +66,10 @@ class ScatterPlotGeneralized {
 
     get colorScale() {
         return this._colorScale;
+    }
+
+    get showAnomaly() {
+        return this._showAnomaly;
     }
 
     set xAxis(val) {
@@ -136,6 +142,13 @@ class ScatterPlotGeneralized {
         // TODO - Attention quand il y a selection
     }
 
+    set showAnomaly(val) {
+        this._showAnomaly = val;
+        this.render.invalidate();
+        this.ctx.clearRect(0, 0, this.width, this.height);
+        this.render(this.data);
+    }
+
     instantiateLi() {
         for (let k of Object.keys(this.spFiles)){
             this.spFiles[k].addEventListener("click", (ev) => {
@@ -162,7 +175,8 @@ class ScatterPlotGeneralized {
         let height = this.height;
         let margin = this.margin;
 
-        let innerHeight = this.innerHeight;
+        let innerHeight = height - 3;
+        let innerWidth = width - 3;
 
         let data = this.data;
         // data = d3.shuffle(data);
@@ -205,8 +219,8 @@ class ScatterPlotGeneralized {
         ctx.lineWidth = 1;
         ctx.scale(devicePixelRatio, devicePixelRatio);
 
-        let xSc = d3.scaleLinear().range([0, width]);
-        let ySc = d3.scaleLinear().range([height, 0]);
+        let xSc = d3.scaleLinear().range([0, innerWidth]);
+        let ySc = d3.scaleLinear().range([innerHeight, 0]);
 
         this.xSc = xSc;
         this.ySc = ySc;
@@ -247,7 +261,7 @@ class ScatterPlotGeneralized {
         render(data);
 
         this.xLine = svg.append("g")
-            .attr("transform", "translate(0," + height + ")")
+            .attr("transform", "translate(0," + innerHeight + ")")
             .attr("class", "firstAxis")
             .call(d3.axisBottom(xSc));
 
@@ -293,14 +307,17 @@ class ScatterPlotGeneralized {
             .text(that._yAxis);
 
         function draw(d) {
+            let anomaly = that.showAnomaly && d.anomaly === -1;
+            ctx.lineWidth = anomaly ? 3 : 1;
+            ctx.globalAlpha = anomaly ? 1 : d3.min([0.85 / Math.pow(data.length, 0.15), 1]);
             if (that.selectedFiles.includes(d.idxFile)) {
                 // ctx.fillStyle = that.color(d[that._cAxis]);
-                ctx.strokeStyle = that.color(d[that._cAxis]);
+                ctx.strokeStyle =  anomaly ? "red" : that.color(d[that._cAxis]);
                 ctx.beginPath();
                 ctx.ellipse(xSc(d[that._xAxis]), ySc(d[that._yAxis]) , 3, 3, 45 * Math.PI/180, 0, 2 * Math.PI);
                 ctx.stroke();
             } else {
-                ctx.fillStyle = "lightgrey";
+                ctx.fillStyle = anomaly ? "red" : "lightgrey";
                 // ctx.fillStyle = that.color(d[that._cAxis]);
                 ctx.fillRect(xSc(d[that._xAxis]), ySc(d[that._yAxis]), that.pointSize, that.pointSize);
             }

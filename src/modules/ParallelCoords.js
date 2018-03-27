@@ -13,11 +13,11 @@ const defaultOptions = {
 };
 
 
-
 class ParallelCoords {
     constructor(id, data, options = {}) {
         this.div = d3.select("#" + id);
         this.data = data;
+        this.selected = data;
         // this.dimensions = dimensions;
         let opts = fillWithDefault(options, defaultOptions, true);
         this.progRendering = opts.progRendering;
@@ -230,6 +230,7 @@ class ParallelCoords {
         let svg = this.svg;
         let canvas = this.canvas;
         let container = this.container;
+        let dragging = {};
 
         // let ctx = this.canvas.node().getContext("2d");
         // ctx.globalCompositeOperation = 'darken';
@@ -274,6 +275,21 @@ class ParallelCoords {
             }
         });
 
+        let dimPos = {};
+
+        function updateDimPos(dimPos) {
+            dimensions.forEach(function (d, i) {
+                dimPos[d.key] = xscale(i);
+            });
+        }
+
+        updateDimPos(dimPos);
+
+        dimensions.sort(function (a, b) {
+            return position(a.key) - position(b.key);
+        });
+        console.log("dim", dimensions);
+
         // type/dimension default setting happens here
         dimensions.forEach((dim) => {
             if (!("domain" in dim)) {
@@ -293,13 +309,15 @@ class ParallelCoords {
             .range(["#5DA5B3", "#D58323", "#DD6CA7", "#54AF52", "#8C92E8", "#E15E5A", "#725D82", "#776327", "#50AB84", "#954D56", "#AB9C27", "#517C3F", "#9D5130", "#357468", "#5E9ACF", "#C47DCB", "#7D9E33", "#DB7F85", "#BA89AD", "#4C6C86", "#B59248", "#D8597D", "#944F7E", "#D67D4B", "#8F86C2"]);
 
         const color2 = d3.scaleLinear()
-            .domain(d3.extent(data, function(d) { return d[that.colorAxis]; }))
+            .domain(d3.extent(data, function (d) {
+                return d[that.colorAxis];
+            }))
             .range(['mediumturquoise', 'hotpink'])
             .interpolate(d3.interpolateHcl);
 
         let color = color1;
 
-        if(that.colorAxis !== "phase_no") {
+        if (that.colorAxis !== "phase_no") {
             color = color2;
         }
 
@@ -316,17 +334,60 @@ class ParallelCoords {
                     ? d.axis.scale(d.scale)  // custom axis
                     : yAxis.scale(d.scale);  // default axis
                 d3.select(this).call(renderAxis)
-                    .on("click", function(d) {
-                        ctx.clearRect(0, 0, width, height);
-                        that.colorAxis = d.key;
-                        color = color1;
-                        if(that.colorAxis !== "phase_no") {
-                            color = color2;
-                            color.domain(d3.extent(data, function(d) { return d[that.colorAxis]; }))
-                        }
+                .on("click", function (d) {
+                    ctx.clearRect(0, 0, width, height);
+                    that.colorAxis = d.key;
+                    color = color1;
+                    if (that.colorAxis !== "phase_no") {
+                        color = color2;
+                        color.domain(d3.extent(data, function (d) {
+                            return d[that.colorAxis];
+                        }))
+                    }
+                    render.invalidate();
+                    render(that.selected);
+                });
+                let initPos = {};
+                let actualKey;
+                let actualDisp;
+                let g = d3.select(this.parentNode).call(d3.drag()
+                    .on("start", function (d) {
                         render.invalidate();
+                        ctx.clearRect(0, 0, width, height);
+                        actualKey = d.key;
+                        dragging[d.key] = position(d.key);
+                        dimensions.forEach(function (dim) {
+                            initPos[dim.key] = dimPos[dim.key];
+                        })
+                    })
+                    .on("drag", function (d) {
+                        let xt = d3.event.x;
+                        if (xt < 0) {
+                            xt = -1;
+                        } else if (xt > width) {
+                            xt = width + 1;
+                        }
+                        dragging[d.key] = xt;
+                        console.log(xt);
+
+                        dimensions.sort(function (a, b) {
+                            return position(a.key) - position(b.key);
+                        });
+                        updateDimPos(dimPos);
+                        g.attr("transform", function (d) {
+                            return "translate(" + xt + ")";
+                        })
+                        // console.log(dragging);
+                    })
+                    .on("end", function (d) {
+                        delete dragging[d.key];
+                        console.log(that.selection);
+                        axes.attr("transform", function (d) {
+                            let displacement = dimPos[d.key];
+                            return  "translate(" + displacement + ")";
+                        });
                         render(that.selected);
-                    });
+                    }));
             })
             .append("text")
             .attr("class", "title")
@@ -351,8 +412,7 @@ class ParallelCoords {
             .attr("width", 16);
 
 
-
-        d3.selectAll(".axis." + that.colorAxis +" .tick text")
+        d3.selectAll(".axis." + that.colorAxis + " .tick text")
             .style("fill", color);
 
         // output.text(d3.tsvFormat(data.slice(0,24)));
@@ -406,6 +466,11 @@ class ParallelCoords {
             ctx.stroke();
         }
 
+        function position(k) {
+            let v = dragging[k];
+            return v == null ? dimPos[k] : v;
+        }
+
         function brushstart() {
             d3.event.sourceEvent.stopPropagation();
         }
@@ -444,6 +509,7 @@ class ParallelCoords {
                     return true;
                 }
             });
+
 
             // show ticks for active brush dimensions
             // and filter ticks to only those within brush extents

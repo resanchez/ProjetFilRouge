@@ -66,31 +66,31 @@ function hideLoading() {
 
 btnHideLoading.addEventListener("click", hideLoading);
 
-let btnTabPC0 = document.getElementById("tablinks0");
-btnTabPC0.addEventListener("click", (ev) => tabsPC(ev, 0));
-let btnTabPC1 = document.getElementById("tablinks1");
-btnTabPC1.addEventListener("click", (ev) => tabsPC(ev, 1));
-
-function tabsPC(evt, group) {
-    // Declare all variables
-    let i, tabcontent, tablinks;
-
-    // Get all elements with class="tabcontent" and hide them
-    tabcontent = document.getElementsByClassName("tabcontentH");
-    for (i = 0; i < tabcontent.length; i++) {
-        tabcontent[i].style.display = "none";
-    }
-
-    // Get all elements with class="tablinks" and remove the class "active"
-    tablinks = document.getElementsByClassName("tablinks");
-    for (i = 0; i < tablinks.length; i++) {
-        tablinks[i].className = tablinks[i].className.replace(" active", "");
-    }
-
-    // Show the current tab, and add an "active" class to the button that opened the tab
-    document.getElementById("tab" + group).style.display = "block";
-    evt.currentTarget.className += " active";
-}
+// let btnTabPC0 = document.getElementById("tablinks0");
+// btnTabPC0.addEventListener("click", (ev) => tabsPC(ev, 0));
+// let btnTabPC1 = document.getElementById("tablinks1");
+// btnTabPC1.addEventListener("click", (ev) => tabsPC(ev, 1));
+//
+// function tabsPC(evt, group) {
+//     // Declare all variables
+//     let i, tabcontent, tablinks;
+//
+//     // Get all elements with class="tabcontent" and hide them
+//     tabcontent = document.getElementsByClassName("tabcontentH");
+//     for (i = 0; i < tabcontent.length; i++) {
+//         tabcontent[i].style.display = "none";
+//     }
+//
+//     // Get all elements with class="tablinks" and remove the class "active"
+//     tablinks = document.getElementsByClassName("tablinks");
+//     for (i = 0; i < tablinks.length; i++) {
+//         tablinks[i].className = tablinks[i].className.replace(" active", "");
+//     }
+//
+//     // Show the current tab, and add an "active" class to the button that opened the tab
+//     document.getElementById("tab" + group).style.display = "block";
+//     evt.currentTarget.className += " active";
+// }
 
 // function dragStarted (evt) {
 // //start drag
@@ -116,8 +116,8 @@ let state = {
 
 let selectedFilesList = document.getElementById("selectedFiles");
 
-let btnDisplayPC0 = document.getElementById("displayPC0");
-let btnDisplayPC1 = document.getElementById("displayPC1");
+// let btnDisplayPC0 = document.getElementById("displayPC0");
+// let btnDisplayPC1 = document.getElementById("displayPC1");
 let btnDisplayPCAll = document.getElementById("displayPCAll");
 
 let selectFileLCSP0 = document.getElementById("selectFileLCSP0");
@@ -134,6 +134,9 @@ let selectXAxisSPGeneralized = document.getElementById("xAxisSPGeneralized");
 let selectYAxisSPGeneralized = document.getElementById("yAxisSPGeneralized");
 let selectCAxisSPGeneralized = document.getElementById("cAxisSPGeneralized");
 let selectColorScaleSPGeneralized = document.getElementById("colorScaleSPGeneralized");
+let checkboxAnomalySPGeneralized = document.getElementById("checkboxAnomalySPGeneralized");
+let sliderSPGeneralized = document.getElementById("sliderSPGeneralized");
+let valueSPGeneralized = document.getElementById("valueSPGeneralized");
 
 // PARALLEL COORD
 function getSelectedValues(select) {
@@ -144,13 +147,13 @@ btnDisplayPCAll.addEventListener("click", function (ev) {
     askPCDataAll();
 });
 
-btnDisplayPC0.addEventListener("click", function (ev) {
-    askPCData(0);
-});
-
-btnDisplayPC1.addEventListener("click", function (ev) {
-    askPCData(1);
-});
+// btnDisplayPC0.addEventListener("click", function (ev) {
+//     askPCData(0);
+// });
+//
+// btnDisplayPC1.addEventListener("click", function (ev) {
+//     askPCData(1);
+// });
 
 
 // LCSP
@@ -233,6 +236,19 @@ selectColorScaleSPGeneralized.addEventListener("change", function (ev) {
     }
 });
 
+checkboxAnomalySPGeneralized.addEventListener("change", function (ev) {
+    if (spGeneralized) {
+        spGeneralized.showAnomaly = this.checked;
+    }
+});
+
+sliderSPGeneralized.addEventListener("change", function (ev) {
+    sendRequest("getSPGeneralizedData", {}, {}, this.value / 100);
+});
+
+sliderSPGeneralized.addEventListener("input", function (ev) {
+   valueSPGeneralized.innerHTML = "" + Math.round(sliderSPGeneralized.value * 100) / 10000;
+});
 
 // ************************* UPDATE UI FUNCTIONS *************************
 function updatePCUI(data) {
@@ -241,7 +257,7 @@ function updatePCUI(data) {
     state[data.group].columns = data.columns;
 
     let selectFilePC = document.getElementById("selectFilePC" + data.group);
-    let selectColumnsPC = document.getElementById("selectColumnsPC" + data.group);
+    let selectColumnsPC = document.getElementById("selectColumnsPC");
     console.log(selectFilePC);
     selectFilePC.innerHTML = "";
     selectColumnsPC.innerHTML = "";
@@ -723,7 +739,69 @@ function updateSelectedFilesList(file, val, isShifted) {
     }
 }
 
+let tr = document.createElement("tr");
+tr.className = "fileInfo";
+
+let td = document.createElement("td");
+
+function showFile(file, tbody) {
+    let tri = tr.cloneNode(false);
+    tri.addEventListener("mousedown", function (ev) {
+        let isAlt = ev.altKey;
+
+        if (!tri.classList.contains("trDisabled")) {
+            let toggle = tri.classList.toggle("trActive");
+            if (toggle) {
+                if (isAlt) {
+                    tri.classList.toggle("groupActive1", true);
+                } else {
+                    tri.classList.toggle("groupActive2", true);
+                }
+            } else {
+                tri.classList.toggle("groupActive1", false);
+                tri.classList.toggle("groupActive2", false);
+            }
+            updateSelectedFilesList(file, toggle, isAlt);
+        }
+    });
+    let tdName = td.cloneNode(false);
+    let tdType = td.cloneNode(false);
+    let tdSize = td.cloneNode(false);
+    let tdDate = td.cloneNode(false);
+    tdName.className = "nameInfo";
+    tdType.className = "typeInfo";
+    tdSize.className = "sizeInfo";
+    tdDate.className = "dateInfo";
+    tdName.innerHTML = file.name;
+    tdType.innerHTML = file.type;
+    tdSize.innerHTML = file.size;
+    tdDate.innerHTML = file.lastModifiedDate;
+    tri.appendChild(tdName);
+    tri.appendChild(tdType);
+    tri.appendChild(tdSize);
+    tri.appendChild(tdDate);
+    tbody.appendChild(tri);
+}
+
+function showMore (files, currentIdx, tbody) {
+    let end = Math.min(files.length, currentIdx + 30);
+    for (let i = currentIdx; i < end; i++) {
+        showFile(files[i], tbody);
+    }
+    return end;
+}
+
 function fillFileList(files, table, key) {
+
+    let div = table.parentNode;
+    let currentIdx = 0;
+
+    div.addEventListener('scroll', function() {
+        if (div.scrollTop + div.clientHeight >= div.scrollHeight) {
+            currentIdx = showMore(files, currentIdx, tbody);
+        }
+    });
+
     console.log(files);
     console.time('sort');
     files.sort(orders[key].compare);
@@ -735,49 +813,8 @@ function fillFileList(files, table, key) {
 
     let tbody = document.createElement("tbody");
     table.appendChild(tbody);
-    let tr = document.createElement("tr");
-    tr.className = "fileInfo";
 
-    let td = document.createElement("td");
-
-    for (let file of files) {
-        let tri = tr.cloneNode(false);
-        tri.addEventListener("mousedown", function (ev) {
-            let isShifted = ev.shiftKey;
-
-            if (!tri.classList.contains("trDisabled")) {
-                let toggle = tri.classList.toggle("trActive");
-                if (toggle) {
-                    if (isShifted) {
-                        tri.classList.toggle("groupActive1", true);
-                    } else {
-                        tri.classList.toggle("groupActive2", true);
-                    }
-                } else {
-                    tri.classList.toggle("groupActive1", false);
-                    tri.classList.toggle("groupActive2", false);
-                }
-                updateSelectedFilesList(file, toggle, isShifted);
-            }
-        });
-        let tdName = td.cloneNode(false);
-        let tdType = td.cloneNode(false);
-        let tdSize = td.cloneNode(false);
-        let tdDate = td.cloneNode(false);
-        tdName.className = "nameInfo";
-        tdType.className = "typeInfo";
-        tdSize.className = "sizeInfo";
-        tdDate.className = "dateInfo";
-        tdName.innerHTML = file.name;
-        tdType.innerHTML = file.type;
-        tdSize.innerHTML = file.size;
-        tdDate.innerHTML = file.lastModifiedDate;
-        tri.appendChild(tdName);
-        tri.appendChild(tdType);
-        tri.appendChild(tdSize);
-        tri.appendChild(tdDate);
-        tbody.appendChild(tri);
-    }
+    currentIdx = showMore(files, currentIdx, tbody);
 }
 
 function searchFiles(fs) {
@@ -807,16 +844,16 @@ let resetSelection = document.getElementById("resetSelection");
 
 resetSelection.addEventListener("click", askPCDataAll);
 
-drawFromSelection.addEventListener("click", function () {
-    let selectedFiles = getSelectedValues(selectFilePC);
-    let selectedColumns = getSelectedValues(selectColumnsPC);
-
-    let selection = pc && pc.selection ? pc.selection : {};
-
-    console.log(pc);
-
-    sendRequest("getPCData", selectedFiles, 0, selectedColumns, selection);
-});
+// drawFromSelection.addEventListener("click", function () {
+//     let selectedFiles = getSelectedValues(selectFilePC);
+//     let selectedColumns = getSelectedValues(selectColumnsPC);
+//
+//     let selection = pc && pc.selection ? pc.selection : {};
+//
+//     console.log(pc);
+//
+//     sendRequest("getPCData", selectedFiles, 0, selectedColumns, selection);
+// });
 
 function askPCDataAll() {
     if (state[0].files.length) {
@@ -829,26 +866,31 @@ function askPCDataAll() {
 
 function askPCData(group) {
     let selectedFiles = getSelectedValues(document.getElementById("selectFilePC" + group));
-    let selectedColumns = getSelectedValues(document.getElementById("selectColumnsPC" + group));
+    let selectedColumns = getSelectedValues(document.getElementById("selectColumnsPC"));
     // let selectedColumns = getSelectedValues(selectColumnsPC);
 
     sendRequest("getPCData", selectedFiles, group, selectedColumns, {});
 }
 
-let pc;
+let pc = [];
 
 function fillParallelCoordinates(data, group, cols) {
     document.getElementById("pcContainer" + group).innerHTML = "";
     document.getElementById("pcContainer").innerHTML = "";
     if (state[0].files.length && state[1].files.length) {
-        pc = new ParallelCoords("pcContainer" + group, data, {
-            colorAxis: "torque_1"
+        pc[group] = new ParallelCoords("pcContainer" + group, data, {
+            colorAxis: cols[cols.length - 1]
         });
+        let otherGroup = group === 0 ? 1 : 0;
+        if (pc[otherGroup]) {
+            pc[group].neighboor = pc[otherGroup];
+            pc[otherGroup].neighboor = pc[group];
+        }
     } else {
-        pc = new ParallelCoords("pcContainer", data, {
+        pc[group] = new ParallelCoords("pcContainer", data, {
             width: 1000,
             height: 600,
-            colorAxis: "torque_1"
+            colorAxis: cols[cols.length - 1]
         });
     }
 }
@@ -916,7 +958,8 @@ function fillLineChartScatterPlotGeneralized(data, group, cols) {
 
 // ************************* SCATTER PLOT GENERALIZED *************************
 function askSPGeneralizedDataAll() {
-    sendRequest("getSPGeneralizedData", {});
+    sendRequest("getSPGeneralizedData", {}, {}, sliderSPGeneralized.value / 100);
+    // sendRequest("getSPGeneralizedData", {});
 }
 
 function fillScatterPlotGeneralized(data, files, columns) {
@@ -930,7 +973,10 @@ function fillScatterPlotGeneralized(data, files, columns) {
     let selectColorScaleSPGeneralized = document.getElementById("colorScaleSPGeneralized");
     spContainerGeneralized.innerHTML = "";
 
-    spGeneralized = new ScatterPlotGeneralized("spGeneralizedContainer", data, spFiles);
+
+    spGeneralized = new ScatterPlotGeneralized("spGeneralizedContainer", data, spFiles, {
+        showAnomaly: checkboxAnomalySPGeneralized.checked
+    });
 
     selectXAxisSPGeneralized.value = spGeneralized.xAxis;
     selectYAxisSPGeneralized.value = spGeneralized.yAxis;
@@ -939,10 +985,10 @@ function fillScatterPlotGeneralized(data, files, columns) {
 }
 
 
-
 function showSPFiles(files) {
     let spFiles = {};
     let listFiles = document.getElementById("spFiles");
+    listFiles.innerHTML = "";
     for (let file of files) {
         let li = document.createElement("li");
         li.innerHTML = file;

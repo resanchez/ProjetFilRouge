@@ -15,6 +15,7 @@ const defaultOptions = {
 
 class ParallelCoords {
     constructor(id, data, options = {}) {
+        this.id = id;
         this.div = d3.select("#" + id);
         this.data = data;
         this.selected = data;
@@ -38,6 +39,7 @@ class ParallelCoords {
     instantiateSupport() {
 
         let that = this;
+        let id = this.id;
         let devicePixelRatio = window.devicePixelRatio || 1;
         // let dimensions = this.dimensions;
         let width = this.width;
@@ -92,16 +94,16 @@ class ParallelCoords {
 
         const dimensionsAll = [
             {
+                key: "flight_time",
+                type: types["Number"],
+                scale: d3.scaleLinear().range([innerHeight, 0])
+            },
+            {
                 key: "date_time",
                 type: types["Date"],
                 axis: d3.axisLeft().tickFormat(function (d) {
                     return formatTime(d);
                 })
-            },
-            {
-                key: "flight_time",
-                type: types["Number"],
-                scale: d3.scaleLinear().range([innerHeight, 0])
             },
             {
                 key: "take_off_switch",
@@ -204,7 +206,7 @@ class ParallelCoords {
             }
         }
 
-        console.log(dimensions);
+        this.dimensions = dimensions;
 
         this.container = this.div.append("div")
             .attr("class", "parcoords")
@@ -231,6 +233,7 @@ class ParallelCoords {
         let canvas = this.canvas;
         let container = this.container;
         let dragging = {};
+        this.dragging = dragging;
 
         // let ctx = this.canvas.node().getContext("2d");
         // ctx.globalCompositeOperation = 'darken';
@@ -246,9 +249,13 @@ class ParallelCoords {
         ctx.lineWidth = 1;
         ctx.scale(devicePixelRatio, devicePixelRatio);
 
+        this.ctx = ctx;
+
         let xscale = d3.scalePoint()
             .domain(d3.range(dimensions.length))
             .range([0, width]);
+
+        this.xscale = xscale;
 
         let yAxis = d3.axisLeft();
 
@@ -277,16 +284,13 @@ class ParallelCoords {
 
         let dimPos = {};
 
-        function updateDimPos(dimPos) {
-            dimensions.forEach(function (d, i) {
-                dimPos[d.key] = xscale(i);
-            });
-        }
 
-        updateDimPos(dimPos);
+        this.dimPos = dimPos;
+
+        ParallelCoords.updateDimPos(dimPos, dimensions, xscale);
 
         dimensions.sort(function (a, b) {
-            return position(a.key) - position(b.key);
+            return ParallelCoords.position(a.key, dragging, dimPos) - ParallelCoords.position(b.key, dragging, dimPos);
         });
         console.log("dim", dimensions);
 
@@ -305,21 +309,15 @@ class ParallelCoords {
             dim.scale.domain(dim.domain);
         });
 
-        const color1 = d3.scaleOrdinal()
-            .range(["#5DA5B3", "#D58323", "#DD6CA7", "#54AF52", "#8C92E8", "#E15E5A", "#725D82", "#776327", "#50AB84", "#954D56", "#AB9C27", "#517C3F", "#9D5130", "#357468", "#5E9ACF", "#C47DCB", "#7D9E33", "#DB7F85", "#BA89AD", "#4C6C86", "#B59248", "#D8597D", "#944F7E", "#D67D4B", "#8F86C2"]);
-
-        const color2 = d3.scaleLinear()
+        let color = d3.scaleLinear()
             .domain(d3.extent(data, function (d) {
                 return d[that.colorAxis];
             }))
             .range(['mediumturquoise', 'hotpink'])
             .interpolate(d3.interpolateHcl);
 
-        let color = color1;
+        this.color = color;
 
-        if (that.colorAxis !== "phase_no") {
-            color = color2;
-        }
 
         let render = renderQueue(draw).rate(150);
         ctx.clearRect(0, 0, width, height);
@@ -327,66 +325,31 @@ class ParallelCoords {
         ctx.globalAlpha = d3.min([0.85 / Math.pow(data.length, 0.3), 1]);
         render(data);
 
+        this.render = render;
+        this.g = [];
 
         axes.append("g")
-            .each(function (d) {
+            .each(function (d, i) {
                 let renderAxis = "axis" in d
                     ? d.axis.scale(d.scale)  // custom axis
                     : yAxis.scale(d.scale);  // default axis
                 d3.select(this).call(renderAxis)
-                .on("click", function (d) {
-                    ctx.clearRect(0, 0, width, height);
-                    that.colorAxis = d.key;
-                    color = color1;
-                    if (that.colorAxis !== "phase_no") {
-                        color = color2;
-                        color.domain(d3.extent(data, function (d) {
-                            return d[that.colorAxis];
-                        }))
-                    }
-                    render.invalidate();
-                    render(that.selected);
-                });
-                let initPos = {};
-                let actualKey;
-                let actualDisp;
-                let g = d3.select(this.parentNode).call(d3.drag()
-                    .on("start", function (d) {
-                        render.invalidate();
-                        ctx.clearRect(0, 0, width, height);
-                        actualKey = d.key;
-                        dragging[d.key] = position(d.key);
-                        dimensions.forEach(function (dim) {
-                            initPos[dim.key] = dimPos[dim.key];
-                        })
+                    .on("click", (d) => {
+                        that.neighboor.colorByAxis(d, that.neighboor);
+                        that.colorByAxis(d, that);
+                    });
+                that.g[i] = d3.select(this.parentNode).call(d3.drag()
+                    .on("start", (d) => {
+                        that.neighboor.dragByAxisStart(d, that.neighboor);
+                        that.dragByAxisStart(d, that);
                     })
-                    .on("drag", function (d) {
-                        let xt = d3.event.x;
-                        if (xt < 0) {
-                            xt = -1;
-                        } else if (xt > width) {
-                            xt = width + 1;
-                        }
-                        dragging[d.key] = xt;
-                        console.log(xt);
-
-                        dimensions.sort(function (a, b) {
-                            return position(a.key) - position(b.key);
-                        });
-                        updateDimPos(dimPos);
-                        g.attr("transform", function (d) {
-                            return "translate(" + xt + ")";
-                        })
-                        // console.log(dragging);
+                    .on("drag", (d) => {
+                        that.neighboor.dragByAxis(d, that.neighboor, i);
+                        that.dragByAxis(d, that, i);
                     })
-                    .on("end", function (d) {
-                        delete dragging[d.key];
-                        console.log(that.selection);
-                        axes.attr("transform", function (d) {
-                            let displacement = dimPos[d.key];
-                            return  "translate(" + displacement + ")";
-                        });
-                        render(that.selected);
+                    .on("end", (d) => {
+                        that.neighboor.dragByAxisEnd(d, that.neighboor);
+                        that.dragByAxisEnd(d, that);
                     }));
             })
             .append("text")
@@ -411,8 +374,9 @@ class ParallelCoords {
             .attr("x", -8)
             .attr("width", 16);
 
+        this.axes = axes;
 
-        d3.selectAll(".axis." + that.colorAxis + " .tick text")
+        d3.selectAll("#" + that.id + " .axis." + that.colorAxis + " .tick text")
             .style("fill", color);
 
         // output.text(d3.tsvFormat(data.slice(0,24)));
@@ -464,11 +428,6 @@ class ParallelCoords {
                 ctx.lineTo(p[0], p[1]);
             });
             ctx.stroke();
-        }
-
-        function position(k) {
-            let v = dragging[k];
-            return v == null ? dimPos[k] : v;
         }
 
         function brushstart() {
@@ -554,6 +513,65 @@ class ParallelCoords {
         return typeof v === "function" ? v : function () {
             return v;
         };
+    }
+
+    colorByAxis(d, that) {
+        that.ctx.clearRect(0, 0, that.width, that.height);
+        that.colorAxis = d.key;
+        that.color.domain(d3.extent(that.data, function (d) {
+            return d[that.colorAxis];
+        }));
+        d3.selectAll("#" + that.id + " .axis .tick text")
+            .style("fill", "black");
+        d3.selectAll("#" + that.id + " .axis." + that.colorAxis + " .tick text")
+            .style("fill", that.color);
+        that.render.invalidate();
+        that.render(that.selected);
+    }
+
+    dragByAxisStart(d, that) {
+        that.render.invalidate();
+        that.ctx.clearRect(0, 0, that.width, that.height);
+        that.dragging[d.key] = ParallelCoords.position(d.key, that.dragging, that.dimPos);
+    }
+
+    dragByAxis(d, that, i) {
+        let xt = d3.event.x;
+        if (xt < 0) {
+            xt = -1;
+        } else if (xt > that.width) {
+            xt = width + 1;
+        }
+        that.dragging[d.key] = xt;
+
+        that.dimensions.sort(function (a, b) {
+            return ParallelCoords.position(a.key, that.dragging, that.dimPos) - ParallelCoords.position(b.key, that.dragging, that.dimPos);
+        });
+        ParallelCoords.updateDimPos(that.dimPos, that.dimensions, that.xscale);
+        console.log(that.g);
+        that.g[i].attr("transform", function (d) {
+            return "translate(" + xt + ")";
+        })
+    }
+
+    dragByAxisEnd(d, that) {
+        delete that.dragging[d.key];
+        that.axes.attr("transform", function (d) {
+            let displacement = that.dimPos[d.key];
+            return "translate(" + displacement + ")";
+        });
+        that.render(that.selected);
+    }
+
+    static position(k, dragging, dimPos) {
+        let v = dragging[k];
+        return v == null ? dimPos[k] : v;
+    }
+
+    static updateDimPos(dimPos, dimensions, xscale) {
+        dimensions.forEach(function (d, i) {
+            dimPos[d.key] = xscale(i);
+        });
     }
 }
 

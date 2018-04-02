@@ -913,6 +913,7 @@ function askLCSPData(group) {
 let lcsp;
 let lcspGeneralized;
 let spGeneralized;
+let pcsp;
 
 function fillLineChartScatterPlot(data, group, cols) {
     document.getElementById("lscpContainer" + group).innerHTML = "";
@@ -977,6 +978,15 @@ function fillScatterPlotGeneralized(data, files, columns) {
     spGeneralized = new ScatterPlotGeneralized("spGeneralizedContainer", data, spFiles, {
         showAnomaly: checkboxAnomalySPGeneralized.checked
     });
+
+    pcsp = new ParallelCoords("sptableftdown", data, {
+        width: 800,
+        height: 250,
+        colorAxis: d3.keys(data[0])[2]
+    });
+
+    spGeneralized.neighboor = pcsp;
+    pcsp.neighboor = spGeneralized;
 
     selectXAxisSPGeneralized.value = spGeneralized.xAxis;
     selectYAxisSPGeneralized.value = spGeneralized.yAxis;

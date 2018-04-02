@@ -3,8 +3,8 @@ import fillWithDefault from "./defaultOptions.js";
 const defaultOptions = {
     opacity: 0.5,
     colorScatter: "orange",
-    width: 600,
-    height: 600,
+    width: 450,
+    height: 450,
     pointSize: 2,
     showAnomaly: false
 };
@@ -178,11 +178,12 @@ class ScatterPlotGeneralized {
         let innerHeight = height - 3;
         let innerWidth = width - 3;
 
-        let data = this.data;
         // data = d3.shuffle(data);
-        data = data.sort((a, b) => {
+        let data = this.data.sort((a, b) => {
             return a[this._cAxis] - b[this._cAxis];
         });
+
+        this.data = data;
         that.selected = data;
 
         this.container = this.div.append("div")
@@ -362,6 +363,11 @@ class ScatterPlotGeneralized {
                 that.spFiles[f].style.color = "crimson";
             }
             console.log(files);
+            let sel = [
+                {key: that._xAxis, extent: [xSc.invert(x0), xSc.invert(x1)]},
+                {key: that._yAxis, extent: [ySc.invert(y0), ySc.invert(y1)]}
+            ];
+            that.neighboor.selectOnPC(sel);
         }
 
         // PC line 407 stop

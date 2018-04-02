@@ -6,7 +6,7 @@ const defaultOptions = {
     filterAxis: true,
     swapAxis: false,
     opacity: 0.5,
-    colorAxis: "phase_no",
+    colorAxis: "oat",
     width: 1000,
     height: 300,
     lineWidth: 1.5
@@ -458,55 +458,90 @@ class ParallelCoords {
             }
 
             that.selection = selection;
+            that.showSelected(that, data, actives);
 
-            let selected = data.filter(function (d) {
-                if (actives.every(function (active) {
-                        let dim = active.dimension;
-                        // test if point is within extents for each active brush
-                        return dim.type.within(d[dim.key], active.extent, dim);
-                    })) {
-                    return true;
-                }
-            });
-
-
-            // show ticks for active brush dimensions
-            // and filter ticks to only those within brush extents
-
-            // svg.selectAll(".axis")
-            //     .filter(function (d) {
-            //         return actives.indexOf(d) > -1 ? true : false;
-            //     })
-            //     .classed("active", true)
-            //     .each(function (dimension, i) {
-            //         var extent = extents[i];
-            //         d3.select(this)
-            //             .selectAll(".tick text")
-            //             .style("display", function (d) {
-            //                 let value = dimension.type.coerce(d);
-            //                 return dimension.type.within(value, extent, dimension) ? null : "none";
-            //             });
-            //     });
-            //
-            // // reset dimensions without active brushes
-            // svg.selectAll(".axis")
-            //     .filter(function (d) {
-            //         return actives.indexOf(d) > -1 ? false : true;
-            //     })
-            //     .classed("active", false)
-            //     .selectAll(".tick text")
-            //     .style("display", null);
-
-
-            ctx.clearRect(0, 0, width, height);
-            // ctx.globalAlpha = 1;
-            ctx.globalAlpha = d3.min([0.85 / Math.pow(selected.length, 0.3), 1]);
-            that.selected = selected;
-            render(selected);
-
-            // output.text(d3.tsvFormat(selected.slice(0, 24)));
         }
 
+        this.dimensions = dimensions;
+
+    }
+
+    // [{
+    //         "dimension": {
+    //             "key": "torque_1",
+    //             "type": {
+    //                 "key": "Number"
+    //             },
+    //             "domain": [
+    //                 1.9,
+    //                 86.6
+    //             ]
+    //         },
+    //         "extent": [
+    //             0,
+    //             20
+    //         ]
+    //     },
+    //     {
+    //         "dimension": {
+    //             "key": "fuel_vol",
+    //             "type": {
+    //                 "key": "Number"
+    //             },
+    //             "domain": [
+    //                 62,
+    //                 285
+    //                 ]
+    //         },
+    //         "extent": [
+    //             36.49717330932617,
+    //             65.4971694946289
+    //             ]
+    //     }];
+
+    // Doit être de la forme au dessus (en pixel pour l'extent)
+
+    // [{
+    //         "key": "ground_speed",
+    //         "extent": [
+    //             128.018578648251,
+    //             179.965528250373
+    //         ]
+    //     },
+    //     {
+    //         "key": "static_pressure",
+    //         "extent": [
+    //             894.9834625859104,
+    //             827.4615482282278
+    //             ]
+    //     }]
+
+    // est de cette forme (en valeur pour l'extent)
+
+    selectOnPC(selection) {
+        let actives = [];
+        selection.forEach(function (el) {
+
+        });
+    }
+
+    showSelected (that, data, actives) {
+        console.log(actives);
+        let selected = data.filter(function (d) {
+            if (actives.every(function (active) {
+                    let dim = active.dimension;
+                    // test if point is within extents for each active brush
+                    return dim.type.within(d[dim.key], active.extent, dim);
+                })) {
+                return true;
+            }
+        });
+
+        that.ctx.clearRect(0, 0, that.width, that.height);
+        // ctx.globalAlpha = 1;
+        that.ctx.globalAlpha = d3.min([0.85 / Math.pow(selected.length, 0.3), 1]);
+        that.selected = selected;
+        that.render(selected);
     }
 
     d3_functor(v) {

@@ -519,19 +519,34 @@ class ParallelCoords {
     // est de cette forme (en valeur pour l'extent)
 
     selectOnPC(selection) {
-        let actives = [];
-        selection.forEach(el => {
-            this.dimensions.forEach(dim => {
-                if(el.key === dim.key) {
-                    let a = {};
-                    a.dimension = dim;
-                    a.extent = [dim.scale(el.extent[1]), dim.scale(el.extent[0])];
-                    actives.push(a);
-                }
+        if (!selection[0].extent[0]) {
+            this.showAll(this, this.data);
+        } else {
+            let actives = [];
+            selection.forEach(el => {
+                this.dimensions.forEach(dim => {
+                    if(el.key === dim.key) {
+                        let a = {};
+                        a.dimension = dim;
+                        a.extent = [dim.scale(el.extent[1]), dim.scale(el.extent[0])];
+                        actives.push(a);
+                    }
+                });
             });
-        });
-        console.log(actives);
-        this.showSelected(this, this.data, actives);
+            console.log(actives);
+            this.showSelected(this, this.data, actives);
+        }
+    }
+
+    showAll (that, data) {
+        that.render.invalidate();
+
+
+        that.ctx.clearRect(0, 0, that.width, that.height);
+        // ctx.globalAlpha = 1;
+        that.ctx.globalAlpha = d3.min([0.85 / Math.pow(data.length, 0.3), 1]);
+        that.selected = data;
+        that.render(data);
     }
 
     showSelected (that, data, actives) {

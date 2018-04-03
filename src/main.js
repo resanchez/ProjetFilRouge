@@ -972,7 +972,9 @@ function fillScatterPlotGeneralized(data, files, columns) {
     let selectYAxisSPGeneralized = document.getElementById("yAxisSPGeneralized");
     let selectCAxisSPGeneralized = document.getElementById("cAxisSPGeneralized");
     let selectColorScaleSPGeneralized = document.getElementById("colorScaleSPGeneralized");
+    let sptableftdown = document.getElementById("sptableftdown");
     spContainerGeneralized.innerHTML = "";
+    sptableftdown.innerHTML = "";
 
 
     spGeneralized = new ScatterPlotGeneralized("spGeneralizedContainer", data, spFiles, {

@@ -435,7 +435,7 @@ class ParallelCoords {
         }
 
         function brush() {
-            render.invalidate();
+
 
             let actives = [];
             svg.selectAll(".axis .brush")
@@ -520,13 +520,23 @@ class ParallelCoords {
 
     selectOnPC(selection) {
         let actives = [];
-        selection.forEach(function (el) {
-
+        selection.forEach(el => {
+            this.dimensions.forEach(dim => {
+                if(el.key === dim.key) {
+                    let a = {};
+                    a.dimension = dim;
+                    a.extent = [dim.scale(el.extent[1]), dim.scale(el.extent[0])];
+                    actives.push(a);
+                }
+            });
         });
+        console.log(actives);
+        this.showSelected(this, this.data, actives);
     }
 
     showSelected (that, data, actives) {
         console.log(actives);
+        that.render.invalidate();
         let selected = data.filter(function (d) {
             if (actives.every(function (active) {
                     let dim = active.dimension;

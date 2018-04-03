@@ -365,8 +365,9 @@ class ScatterPlotGeneralized {
             console.log(files);
             let sel = [
                 {key: that._xAxis, extent: [xSc.invert(x0), xSc.invert(x1)]},
-                {key: that._yAxis, extent: [ySc.invert(y0), ySc.invert(y1)]}
+                {key: that._yAxis, extent: [ySc.invert(y1), ySc.invert(y0)]}
             ];
+            console.log(x0, x1, y0, y1);
             that.neighboor.selectOnPC(sel);
         }
 

@@ -988,7 +988,7 @@ function fillScatterPlotGeneralized(data, files, columns) {
     });
 
     spGeneralized.neighboor = pcsp;
-    pcsp.neighboor = spGeneralized;
+    // pcsp.neighboor = spGeneralized;
 
     selectXAxisSPGeneralized.value = spGeneralized.xAxis;
     selectYAxisSPGeneralized.value = spGeneralized.yAxis;

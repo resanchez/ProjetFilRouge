@@ -335,20 +335,28 @@ class ParallelCoords {
                     : yAxis.scale(d.scale);  // default axis
                 d3.select(this).call(renderAxis)
                     .on("click", (d) => {
-                        that.neighboor.colorByAxis(d, that.neighboor);
+                        if (that.neighboor) {
+                            that.neighboor.colorByAxis(d, that.neighboor);
+                        }
                         that.colorByAxis(d, that);
                     });
                 that.g[i] = d3.select(this.parentNode).call(d3.drag()
                     .on("start", (d) => {
-                        that.neighboor.dragByAxisStart(d, that.neighboor);
+                        if (that.neighboor) {
+                            that.neighboor.dragByAxisStart(d, that.neighboor);
+                        }
                         that.dragByAxisStart(d, that);
                     })
                     .on("drag", (d) => {
-                        that.neighboor.dragByAxis(d, that.neighboor, i);
+                        if (that.neighboor) {
+                            that.neighboor.dragByAxis(d, that.neighboor, i);
+                        }
                         that.dragByAxis(d, that, i);
                     })
                     .on("end", (d) => {
-                        that.neighboor.dragByAxisEnd(d, that.neighboor);
+                        if (that.neighboor) {
+                            that.neighboor.dragByAxisEnd(d, that.neighboor);
+                        }
                         that.dragByAxisEnd(d, that);
                     }));
             })
@@ -519,8 +527,9 @@ class ParallelCoords {
     // est de cette forme (en valeur pour l'extent)
 
     selectOnPC(selection) {
+        console.log(this.selected);
         if (!selection[0].extent[0]) {
-            this.showAll(this, this.data);
+            this.showAll(this, this.selected);
         } else {
             let actives = [];
             selection.forEach(el => {
@@ -533,8 +542,7 @@ class ParallelCoords {
                     }
                 });
             });
-            console.log(actives);
-            this.showSelected(this, this.data, actives);
+            this.showSelected(this, this.selected, actives);
         }
     }
 
@@ -545,12 +553,13 @@ class ParallelCoords {
         that.ctx.clearRect(0, 0, that.width, that.height);
         // ctx.globalAlpha = 1;
         that.ctx.globalAlpha = d3.min([0.85 / Math.pow(data.length, 0.3), 1]);
-        that.selected = data;
+        // TODO - attention quand on fera la selection inverse (2 listes selected ?)
+        // that.selected = data;
         that.render(data);
     }
 
     showSelected (that, data, actives) {
-        console.log(actives);
+        console.log(data);
         that.render.invalidate();
         let selected = data.filter(function (d) {
             if (actives.every(function (active) {
@@ -565,7 +574,8 @@ class ParallelCoords {
         that.ctx.clearRect(0, 0, that.width, that.height);
         // ctx.globalAlpha = 1;
         that.ctx.globalAlpha = d3.min([0.85 / Math.pow(selected.length, 0.3), 1]);
-        that.selected = selected;
+        // TODO - attention quand on fera la selection inverse (2 listes selected ?)
+        // that.selected = selected;
         that.render(selected);
     }
 

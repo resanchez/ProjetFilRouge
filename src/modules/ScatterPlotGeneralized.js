@@ -333,7 +333,6 @@ class ScatterPlotGeneralized {
             .call(brushSc);
 
         function brush() {
-            console.log("brush end");
             let selection = d3.event.selection || [0, width];
             that.selection = selection;
 
@@ -362,12 +361,10 @@ class ScatterPlotGeneralized {
             for (let f of files){
                 that.spFiles[f].style.color = "crimson";
             }
-            console.log(files);
             let sel = [
                 {key: that._xAxis, extent: [xSc.invert(x0), xSc.invert(x1)]},
                 {key: that._yAxis, extent: [ySc.invert(y1), ySc.invert(y0)]}
             ];
-            console.log(x0, x1, y0, y1);
             that.neighboor.selectOnPC(sel);
         }
 

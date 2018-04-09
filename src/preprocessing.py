@@ -140,7 +140,7 @@ def get_lc_sp_data(data, group, args):
         feature_x = args[0]
         feature_y = args[1]
     else:
-        feature_x = "altitude"
+        feature_x = "n1_1"
         feature_y = "fuel_flow"
     return {"lcspData": create_dict(df[df["idxFile"] == data][["flight_time", feature_x, feature_y]]), "group": group,
             "lcspColumns": [feature_x, feature_y]}
@@ -157,7 +157,7 @@ def get_lc_sp_generalized_data(data, group, args):
         feature_x = args[0]
         feature_y = args[1]
     else:
-        feature_x = "altitude"
+        feature_x = "n1_1"
         feature_y = "fuel_flow"
 
     grouped = df.groupby(by="idxFile", as_index=False) \

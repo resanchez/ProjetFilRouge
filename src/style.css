@@ -352,23 +352,23 @@ pre {
 /* LINE CHART + SCATTER PLOT */
 
 .firstAxis text {
-    fill: hotpink;
+    fill: #575fcf;
     font-size: 12px;
     cursor: move;
 }
 
 .secondAxis text {
-    fill: lime;
+    fill: #ef5777;
     font-size: 12px;
     cursor: move;
 }
 
 .firstLabel {
-    fill: hotpink;
+    fill: #575fcf;
 }
 
 .secondLabel {
-    fill: lime;
+    fill: #ef5777;
 }
 
 text {
@@ -394,10 +394,10 @@ circle {
 
 .rectTime {
     fill-opacity: 0.5;
-    fill: orange;
+    fill: #34e7e4;
     stroke-opacity: 0.6;
     stroke-width: 2;
-    stroke: darkorange;
+    stroke: #00d8d6;
 }
 
 div.tooltip {
@@ -423,7 +423,7 @@ div.tooltip {
 }
 
 .colored {
-    fill: orange;
+    fill: #34e7e4;
 }
 
 .uncolored {
@@ -433,7 +433,7 @@ div.tooltip {
 
 .flightsLeft {
     fill: none;
-    stroke: hotpink;
+    stroke: #575fcf;
     /*stroke-linejoin: round;*/
     /*stroke-linecap: round;*/
     stroke-width: 1px;
@@ -442,7 +442,7 @@ div.tooltip {
 
 .flightsRight {
     fill: none;
-    stroke: lime;
+    stroke: #ef5777;
     /*stroke-linejoin: round;*/
     /*stroke-linecap: round;*/
     stroke-width: 1px;

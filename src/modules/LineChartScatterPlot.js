@@ -299,7 +299,7 @@ class LineChartScatterPlot {
             .data([data])
             .attr("class", "line line1")
             .attr("clip-path", "url(#clip)")
-            .style("stroke", "hotpink")
+            .style("stroke", "#575fcf")
             .attr("d", valueline);
 
         // Add the valueline2 path.
@@ -307,7 +307,7 @@ class LineChartScatterPlot {
             .data([data])
             .attr("class", "line line2")
             .attr("clip-path", "url(#clip)")
-            .style("stroke", "lime")
+            .style("stroke", "#ef5777")
             .attr("d", valueline2);
 
         // let xAxis = d3.axisBottom(x).tickFormat(d3.timeFormat("%H:%M:%S"))
@@ -416,7 +416,7 @@ class LineChartScatterPlot {
                 return ySc(d[traits[1]]);
             })
             .attr("r", 4)
-            .attr("fill", "orange");
+            .attr("fill", "#00d8d6");
 
         this.nodeBrushSc = contextSc.append("g")
             .attr("class", "brush brushSc")

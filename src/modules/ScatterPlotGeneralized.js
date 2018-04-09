@@ -43,9 +43,12 @@ class ScatterPlotGeneralized {
         if (idx2 > -1) {
             this.traits.splice(idx2, 1);
         }
-        this._xAxis = this.traits[0];
-        this._yAxis = this.traits[1];
-        this._cAxis = this.traits[2];
+        this._xAxis = "n1_1";
+        // this._xAxis = this.traits[0];
+        this._yAxis = "fuel_flow";
+        // this._yAxis = this.traits[1];
+        this._cAxis = "fuel_flow";
+        // this._cAxis = this.traits[2];
         this._colorScale = "linear";
         console.log(this.traits);
         this.instantiateLi();

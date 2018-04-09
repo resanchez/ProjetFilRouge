@@ -39,7 +39,95 @@
             </div>
             <div id="rightPane">
                 <div class="fixedDiv">
-                    <button id="addSelectedFiles">Add Selected Files</button>
+                    <button id="myBtn">File Selection</button>
+                    <div id="myModal" class="modal">
+
+
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <span class="close">&times;</span>
+                                <h2>Sampling</h2>
+                            </div>
+                            <div class="modal-body">
+
+                                <div>
+                                    <button id="addSelectedFiles">Add Selected Files</button>
+
+                                    <table style="width:100%">
+                                        <th>Groupe 1</th>
+                                        <tr>
+                                            <td>
+                                                <div class="slidecontainer">
+                                                    <p>
+                                                        <input type="range" min="1" max="100" value="50" class="slider" id="myRange0"/>
+                                                    <div>
+                                                        Number of selected lines:
+                                                        <span id="nbr_line0">0</span>
+                                                    </div>
+                                                    </p>
+                                                    <p>Percentile: <span id="percentile0"/></p>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <p>Phase Selection</p>
+                                                <select multiple id="phase_selection0">
+                                                    <option selected value="">No restriction</option>
+                                                    <option value="-1">-1</option>
+                                                    <option value="0">0</option>
+                                                    <option value="1">1</option>
+                                                    <option value="2">2</option>
+                                                    <option value="3">3</option>
+                                                    <option value="4">4</option>
+                                                    <option value="5">5</option>
+                                                    <option value="6">6</option>
+                                                    <option value="7">7</option>
+                                                    <option value="8">8</option>
+                                                    <option value="9">9</option>
+                                                    <option value="10">10</option>
+                                                    <option value="11">11</option>
+                                                </select>
+                                            </td>
+                                        </tr>
+                                        <th>Groupe 2</th>
+
+                                        <tr>
+                                            <td>
+                                                <div class="slidecontainer">
+                                                    <p>
+                                                        <input type="range" min="1" max="100" value="50" class="slider" id="myRange1"/>
+                                                    <div>
+                                                        Number of selected lines:
+                                                        <span id="nbr_line1">0</span>
+                                                    </div>
+                                                    </p>
+                                                    <p>Percentile: <span id="percentile1"/></p>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <p>Phase Selection</p>
+                                                <select multiple id="phase_selection1">
+                                                    <option selected value="">No restriction</option>
+                                                    <option value="-1">-1</option>
+                                                    <option value="0">0</option>
+                                                    <option value="1">1</option>
+                                                    <option value="2">2</option>
+                                                    <option value="3">3</option>
+                                                    <option value="4">4</option>
+                                                    <option value="5">5</option>
+                                                    <option value="6">6</option>
+                                                    <option value="7">7</option>
+                                                    <option value="8">8</option>
+                                                    <option value="9">9</option>
+                                                    <option value="10">10</option>
+                                                    <option value="11">11</option>
+                                                </select>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                     <div style="height: 300px">
                         Selected Files :
                         <ul id="selectedFiles">

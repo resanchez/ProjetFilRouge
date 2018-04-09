@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 from sklearn.ensemble import IsolationForest
+import random
 
 df0 = pd.DataFrame()
 df1 = pd.DataFrame()
@@ -51,8 +52,27 @@ def add_selected_files0(data, args):
         cols = d.columns
         cols = cols.map(lambda x: x.replace(' ', '_').replace('.', '') if isinstance(x, (bytes, str)) else x)
         d.columns = cols
+        percentile= 100
+        list_selected_phases=[]
+        # print(args, len(args))
+        if args:
+            #d['group'] = args[0]
+            if len(args)>1 and len(args) <=2:
+                if args[1] != None:
+                    list_selected_phases = args[1]
+                if args[0] != None:
+                    percentile = int(args[0])
         frames = [df0, d]
         df0 = pd.concat(frames).drop_duplicates().reset_index(drop=True)
+
+        if list_selected_phases != []:
+            list_selected_phases = list(map(int, list_selected_phases))
+            df0 = df0.loc[df0['phase_no'].isin(list_selected_phases)]
+
+        # resampling if requested
+        random_resample_list = list(random.sample([i for i in range(len(df0.index))], int(np.trunc(percentile / 100 *len(df0.index)))))
+
+        df0 = df0.iloc[random_resample_list]
 
         variables0["files"] = list(df0["idxFile"].unique())
         variables0["columns"] = list(df0.columns.values)
@@ -76,10 +96,28 @@ def add_selected_files1(data, args):
         cols = d.columns
         cols = cols.map(lambda x: x.replace(' ', '_').replace('.', '') if isinstance(x, (bytes, str)) else x)
         d.columns = cols
+        percentile= 100
+        list_selected_phases=[]
+        # print(args, len(args))
+        if args:
+            # d['group'] = args[0]
+            if len(args)>1 and len(args) <=2:
+                if args[1] != None:
+                    list_selected_phases = args[1]
+                if args[0] != None:
+                    percentile = int(args[0])
         frames = [df1, d]
         df1 = pd.concat(frames).drop_duplicates().reset_index(drop=True)
         # debug_df()
         # print(list(d["idxFile"].unique()))
+        if list_selected_phases != []:
+            list_selected_phases = list(map(int, list_selected_phases))
+            df1 = df1.loc[df1['phase_no'].isin(list_selected_phases)]
+
+        # resampling if requested
+        random_resample_list = list(random.sample([i for i in range(len(df1.index))], int(np.trunc(percentile / 100 *len(df1.index)))))
+
+        df1 = df1.iloc[random_resample_list]
 
         variables1["files"] = list(df1["idxFile"].unique())
         variables1["columns"] = list(df1.columns.values)

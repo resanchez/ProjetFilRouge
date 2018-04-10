@@ -527,14 +527,13 @@ class ParallelCoords {
     // est de cette forme (en valeur pour l'extent)
 
     selectOnPC(selection) {
-        console.log(this.selected);
-        if (!selection[0].extent[0]) {
+        if (!selection[0].extent[0] && !selection[0].extent[1] && !selection[1].extent[0] && !selection[1].extent[1]) {
             this.showAll(this, this.selected);
         } else {
             let actives = [];
             selection.forEach(el => {
                 this.dimensions.forEach(dim => {
-                    if(el.key === dim.key) {
+                    if (el.key === dim.key) {
                         let a = {};
                         a.dimension = dim;
                         a.extent = [dim.scale(el.extent[1]), dim.scale(el.extent[0])];
@@ -546,7 +545,7 @@ class ParallelCoords {
         }
     }
 
-    showAll (that, data) {
+    showAll(that, data) {
         that.render.invalidate();
 
 
@@ -558,7 +557,7 @@ class ParallelCoords {
         that.render(data);
     }
 
-    showSelected (that, data, actives) {
+    showSelected(that, data, actives) {
         console.log(data);
         that.render.invalidate();
         let selected = data.filter(function (d) {

@@ -134,7 +134,6 @@ let selectXAxisSPGeneralized = document.getElementById("xAxisSPGeneralized");
 let selectYAxisSPGeneralized = document.getElementById("yAxisSPGeneralized");
 let selectCAxisSPGeneralized = document.getElementById("cAxisSPGeneralized");
 let selectColorScaleSPGeneralized = document.getElementById("colorScaleSPGeneralized");
-let checkboxAnomalySPGeneralized = document.getElementById("checkboxAnomalySPGeneralized");
 let sliderSPGeneralized = document.getElementById("sliderSPGeneralized");
 let valueSPGeneralized = document.getElementById("valueSPGeneralized");
 
@@ -234,20 +233,6 @@ selectColorScaleSPGeneralized.addEventListener("change", function (ev) {
     if (spGeneralized) {
         spGeneralized.colorScale = featureC;
     }
-});
-
-checkboxAnomalySPGeneralized.addEventListener("change", function (ev) {
-    if (spGeneralized) {
-        spGeneralized.showAnomaly = this.checked;
-    }
-});
-
-sliderSPGeneralized.addEventListener("change", function (ev) {
-    sendRequest("getSPGeneralizedData", {}, {}, this.value / 100);
-});
-
-sliderSPGeneralized.addEventListener("input", function (ev) {
-   valueSPGeneralized.innerHTML = "" + Math.round(sliderSPGeneralized.value * 100) / 10000;
 });
 
 // ************************* UPDATE UI FUNCTIONS *************************
@@ -814,7 +799,12 @@ function fillFileList(files, table, key) {
     let tbody = document.createElement("tbody");
     table.appendChild(tbody);
 
-    currentIdx = showMore(files, currentIdx, tbody);
+    console.log(table.getBoundingClientRect(), div.scrollHeight);
+
+    while (table.getBoundingClientRect().height <= div.clientHeight) {
+        currentIdx = showMore(files, currentIdx, tbody);
+    }
+
 }
 
 function searchFiles(fs) {
@@ -937,7 +927,7 @@ function fillLineChartScatterPlot(data, group, cols) {
 
 // ************************* LINE CHART + SCATTER PLOT GENERALIZED *************************
 function askLCSPGeneralizedDataAll() {
-    askLCSPGeneralizedData(0);
+    askLCSPGeneralizedData();
     // askLCSPGeneralizedData(1);
 }
 
@@ -959,7 +949,7 @@ function fillLineChartScatterPlotGeneralized(data, group, cols) {
 
 // ************************* SCATTER PLOT GENERALIZED *************************
 function askSPGeneralizedDataAll() {
-    sendRequest("getSPGeneralizedData", {}, {}, sliderSPGeneralized.value / 100);
+    sendRequest("getSPGeneralizedData", {}, {});
     // sendRequest("getSPGeneralizedData", {});
 }
 
@@ -978,17 +968,17 @@ function fillScatterPlotGeneralized(data, files, columns) {
 
 
     spGeneralized = new ScatterPlotGeneralized("spGeneralizedContainer", data, spFiles, {
-        showAnomaly: checkboxAnomalySPGeneralized.checked
+        colorSelect: selectCAxisSPGeneralized
     });
 
     pcsp = new ParallelCoords("sptableftdown", data, {
         width: 800,
         height: 250,
-        colorAxis: d3.keys(data[0])[2]
+        colorAxis: spGeneralized.cAxis
     });
 
     spGeneralized.neighboor = pcsp;
-    // pcsp.neighboor = spGeneralized;
+    pcsp.neighboorSc = spGeneralized;
 
     selectXAxisSPGeneralized.value = spGeneralized.xAxis;
     selectYAxisSPGeneralized.value = spGeneralized.yAxis;

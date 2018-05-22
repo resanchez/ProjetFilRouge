@@ -6,7 +6,6 @@ const defaultOptions = {
     width: 450,
     height: 450,
     pointSize: 2,
-    showAnomaly: false
 };
 
 const colorScales = {
@@ -24,10 +23,8 @@ class ScatterPlotGeneralized {
         this.spFiles = spFiles;
         this.selectedFiles = Object.keys(spFiles);
         let opts = fillWithDefault(options, defaultOptions, false);
-        console.log(opts);
         this.opacity = opts.opacity;
         this.colorScatter = opts.colorScatter;
-        this._showAnomaly = opts.showAnomaly;
         this.margin = {top: 0, right: 20, bottom: 50, left: 50};
         this.width = opts.width - this.margin.left - this.margin.right;
         this.height = opts.height - this.margin.top - this.margin.bottom;
@@ -50,7 +47,7 @@ class ScatterPlotGeneralized {
         this._cAxis = "fuel_flow";
         // this._cAxis = this.traits[2];
         this._colorScale = "linear";
-        console.log(this.traits);
+        this.colorSelect = opts.colorSelect;
         this.instantiateLi();
         this.instantiateSupport();
     }
@@ -71,12 +68,8 @@ class ScatterPlotGeneralized {
         return this._colorScale;
     }
 
-    get showAnomaly() {
-        return this._showAnomaly;
-    }
 
     set xAxis(val) {
-        console.log("xAxis", val);
         this.render.invalidate();
         this.ctx.clearRect(0, 0, this.width, this.height);
         this._xAxis = val;
@@ -92,7 +85,6 @@ class ScatterPlotGeneralized {
     }
 
     set yAxis(val) {
-        console.log("yAxis", val);
         this.render.invalidate();
         this.ctx.clearRect(0, 0, this.width, this.height);
         this._yAxis = val;
@@ -108,17 +100,20 @@ class ScatterPlotGeneralized {
     }
 
     set cAxis(val) {
-        console.log("cAxis", val);
         this.render.invalidate();
         this.ctx.clearRect(0, 0, this.width, this.height);
         this._cAxis = val;
         this.color = this.color1;
+        if (this.colorSelect) {
+            this.colorSelect.value = val;
+        }
         if (this._cAxis !== "phase_no") {
             this.color = this.color2;
             this.color.domain(d3.extent(this.data, (d) => {
                 return d[this._cAxis];
             }))
         }
+        this.neighboor.colorByAxis({key: this._cAxis}, this.neighboor);
         this.data = this.data.sort((a, b) => {
             return a[this._cAxis] - b[this._cAxis];
         });
@@ -127,7 +122,6 @@ class ScatterPlotGeneralized {
     }
 
     set colorScale(val) {
-        console.log("colorScale", val);
         this.render.invalidate();
         this.ctx.clearRect(0, 0, this.width, this.height);
         this._colorScale = val;
@@ -145,12 +139,7 @@ class ScatterPlotGeneralized {
         // TODO - Attention quand il y a selection
     }
 
-    set showAnomaly(val) {
-        this._showAnomaly = val;
-        this.render.invalidate();
-        this.ctx.clearRect(0, 0, this.width, this.height);
-        this.render(this.data);
-    }
+
 
     instantiateLi() {
         for (let k of Object.keys(this.spFiles)){
@@ -311,17 +300,16 @@ class ScatterPlotGeneralized {
             .text(that._yAxis);
 
         function draw(d) {
-            let anomaly = that.showAnomaly && d.anomaly === -1;
-            ctx.lineWidth = anomaly ? 3 : 1;
-            ctx.globalAlpha = anomaly ? 1 : d3.min([0.85 / Math.pow(data.length, 0.15), 1]);
+            ctx.lineWidth = 1;
+            ctx.globalAlpha = d3.min([0.85 / Math.pow(data.length, 0.15), 1]);
             if (that.selectedFiles.includes(d.idxFile)) {
                 // ctx.fillStyle = that.color(d[that._cAxis]);
-                ctx.strokeStyle =  anomaly ? "red" : that.color(d[that._cAxis]);
+                ctx.strokeStyle = that.color(d[that._cAxis]);
                 ctx.beginPath();
                 ctx.ellipse(xSc(d[that._xAxis]), ySc(d[that._yAxis]) , 3, 3, 45 * Math.PI/180, 0, 2 * Math.PI);
                 ctx.stroke();
             } else {
-                ctx.fillStyle = anomaly ? "red" : "lightgrey";
+                ctx.fillStyle = "lightgrey";
                 // ctx.fillStyle = that.color(d[that._cAxis]);
                 ctx.fillRect(xSc(d[that._xAxis]), ySc(d[that._yAxis]), that.pointSize, that.pointSize);
             }
@@ -339,7 +327,6 @@ class ScatterPlotGeneralized {
             let selection = d3.event.selection || [0, width];
             that.selection = selection;
 
-            console.log(selection);
             let x0 = selection[0][0],
                 x1 = selection[1][0],
                 y0 = selection[0][1],
@@ -372,6 +359,44 @@ class ScatterPlotGeneralized {
         }
 
         // PC line 407 stop
+    }
+
+    selectOnSP(selection) {
+        if (Object.keys(selection).length === 0) {
+            this.showAll(this, this.data)
+        } else {
+            let actives = [];
+            for (let prop in selection) {
+                if(selection.hasOwnProperty(prop)) {
+                    actives.push({key: prop, extent: selection[prop]})
+                }
+            }
+            this.showSelected(this, this.data, actives)
+        }
+    }
+
+    showAll(that, data) {
+        that.render.invalidate();
+        that.ctx.clearRect(0, 0, that.width, that.height);
+        that.ctx.globalAlpha = d3.min([0.85 / Math.pow(data.length, 0.15), 1]);
+        that.render(data);
+    }
+
+    showSelected(that, data, actives) {
+        that.render.invalidate();
+        let selected = data.filter(function (d) {
+            if (actives.every(function (active) {
+                    return d[active.key] <= active.extent[0] && d[active.key] >= active.extent[1];
+                })) {
+                return true;
+            }
+        });
+
+        that.ctx.clearRect(0, 0, that.width, that.height);
+        that.ctx.globalAlpha = d3.min([0.85 / Math.pow(selected.length, 0.15), 1]);
+        // TODO - attention quand on fera la selection inverse (2 listes selected ?)
+        // that.selected = selected;
+        that.render(selected);
     }
 }
 

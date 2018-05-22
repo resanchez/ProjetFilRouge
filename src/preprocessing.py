@@ -147,11 +147,9 @@ def get_lc_sp_data(data, group, args):
 
 
 def get_lc_sp_generalized_data(data, group, args):
-    df = df0
 
-    if group == 1:
-        print("DataFrame Group 1")
-        df = df1
+    frames = [df0, df1]
+    df = pd.concat(frames).drop_duplicates().reset_index(drop=True)
 
     if args:
         feature_x = args[0]
@@ -171,28 +169,12 @@ def get_lc_sp_generalized_data(data, group, args):
 
 
 def get_sp_generalized_data(data, group, args):
-    # print(args)
-    contamination = args[0]
-
-    print("CONTAMINATION ", contamination)
     frames = [df0, df1]
     df = pd.concat(frames).drop_duplicates().reset_index(drop=True)
-    cols = df[["idxFile", "date_time", "flight_time"]]
-    df_isolation = df.copy().drop(["idxFile", "date_time", "flight_time"], axis=1)
 
-    X = df_isolation.as_matrix()
-
-    # # fit the model
-    clf = IsolationForest(max_samples=100, contamination=contamination)
-    clf.fit(X)
-    y_pred_train = clf.predict(X)
-
-    df_isolation["anomaly"] = y_pred_train
-    df_isolation[["idxFile", "date_time", "flight_time"]] = cols
-
-    return {"spGeneralizedData": create_dict(df_isolation),
-            "spGeneralizedFiles": list(df_isolation["idxFile"].unique()),
-            "spGeneralizedColumns": list(df_isolation.columns.values)}
+    return {"spGeneralizedData": create_dict(df),
+            "spGeneralizedFiles": list(df["idxFile"].unique()),
+            "spGeneralizedColumns": list(df.columns.values)}
 
 
 # def get_list_files(data, args):

@@ -27,7 +27,6 @@ class ParallelCoords {
         this.swapAxis = opts.swapAxis;
         this.opacity = opts.opacity;
         this.colorAxis = opts.colorAxis;
-        console.log(this);
         this.margin = {top: 50, right: 100, bottom: 20, left: 100};
         this.width = opts.width - this.margin.left - this.margin.right;
         this.height = opts.height - this.margin.top - this.margin.bottom;
@@ -50,7 +49,8 @@ class ParallelCoords {
 
         let data = this.data;
         data = d3.shuffle(data);
-        that.selected = data;
+        that.selectedSelf = data.slice(0);
+        that.selectedExt = data.slice(0);
 
         let parseTime = d3.timeParse("%Y-%m-%d %H:%M:%S");
         let formatTime = d3.timeFormat("%H:%M:%S");
@@ -235,6 +235,8 @@ class ParallelCoords {
         let dragging = {};
         this.dragging = dragging;
 
+
+
         // let ctx = this.canvas.node().getContext("2d");
         // ctx.globalCompositeOperation = 'darken';
         // ctx.globalAlpha = this.opacity;
@@ -262,8 +264,8 @@ class ParallelCoords {
         let axes = svg.selectAll(".axis")
             .data(dimensions)
             .enter().append("g")
-            .attr("class", function (d) {
-                return "axis " + d.key.replace(/ /g, "_");
+            .attr("class", function (d, i) {
+                return "axis axis" + i + " " + d.key.replace(/ /g, "_");
             })
             .attr("transform", function (d, i) {
                 return "translate(" + xscale(i) + ")";
@@ -292,7 +294,6 @@ class ParallelCoords {
         dimensions.sort(function (a, b) {
             return ParallelCoords.position(a.key, dragging, dimPos) - ParallelCoords.position(b.key, dragging, dimPos);
         });
-        console.log("dim", dimensions);
 
         // type/dimension default setting happens here
         dimensions.forEach((dim) => {
@@ -338,6 +339,9 @@ class ParallelCoords {
                         if (that.neighboor) {
                             that.neighboor.colorByAxis(d, that.neighboor);
                         }
+                        if (that.neighboorSc) {
+                            that.neighboorSc.cAxis = d.key;
+                        }
                         that.colorByAxis(d, that);
                     });
                 that.g[i] = d3.select(this.parentNode).call(d3.drag()
@@ -367,16 +371,50 @@ class ParallelCoords {
                 return "description" in d ? d.description : d.key;
             });
 
+
+        console.log(d3.select(this));
+
+        // let zoomY = d3.zoom()
+            // .scaleExtent([1, 64]);
+
+        let zoomsY = [];
+        let brushes = [];
+
+        let zooms_info = [];
+
         // Add and store a brush for each axis.
         axes.append("g")
             .attr("class", "brush")
-            .each(function (d) {
+            .each(function (d, i) {
                 d3.select(this).call(d.brush = d3.brushY()
                     .extent([[-10, 0], [10, height]])
                     .on("start", brushstart)
                     .on("brush", brush)
                     .on("end", brush)
-                )
+                );
+                // d3.select(this).on("click", () => {
+                //     d3.select(this).call(zoomsY[i].transform, d3.zoomIdentity);
+                // });
+                let zoom = d3.zoom()
+
+                    // .scaleExtent([1, 64])
+                    // .translateExtent([[0, 0], [width, height]])
+                    // .extent([[0, 0], [width, height]])
+                    .on("zoom", () => zoomed(d3.event, d, i));
+                // let zoom = d3.zoom()
+                //     .scaleExtent([1, 64])
+                //     // .translateExtent([[0, 0], [width, height]])
+                //     // .extent([[0, 0], [width, height]])
+                //     .on("zoom", () => zoomed(d3.event, d, i));
+                d3.select(this).call(zoom);
+                zoomsY[i] = zoom;
+                zooms_info[i] = {};
+                zooms_info[i].k = 1;
+                zooms_info[i].x = 0;
+                zooms_info[i].y = 0;
+
+                // zoomsY[i] = zoom;
+                // brushes[i] = d3.select(this);
             })
             .selectAll("rect")
             .attr("x", -8)
@@ -466,13 +504,135 @@ class ParallelCoords {
             }
 
             that.selection = selection;
-            that.showSelected(that, data, actives);
-
+            that.showSelected(that, data, actives, true);
+            if (that.neighboorSc) {
+                that.neighboorSc.selectOnSP(selection);
+            }
         }
-
         this.dimensions = dimensions;
 
+        function zoomed(e, d, index) {
+            axes.selectAll("*").remove();
+            zooms_info[index].k *= e.transform.k;
+            zooms_info[index].x = e.transform.x;
+            zooms_info[index].y = e.transform.y;
+            // let renderAxis = "axis" in d
+            //     ? d.axis.scale(d.scale)  // custom axis
+            //     : yAxis.scale(d.scale);
+            // TODO: update d.scale ?
+            // axes
+            //     .filter(function (d, i) { return i === index;})
+            //     .call(renderAxis.scale(newScale));
+            // axes.each(function (d, i) {
+            //     let renderAxis = "axis" in d
+            //         ? d.axis.scale(d.scale)  // custom axis
+            //         : yAxis.scale(d.scale);
+            //     let sc = i === index ? e.transform.rescaleY(d.scale) : d.scale;
+            //     d3.select(this).call(renderAxis.scale(sc))
+            // });
+
+            axes.selectAll("*").remove();
+
+            axes.append("g")
+                .each(function (d, i) {
+                    let renderAxis = "axis" in d
+                        ? d.axis.scale(d.scale)  // custom axis
+                        : yAxis.scale(d.scale);
+                    if (i === index) {
+                        d.scale = e.transform.rescaleY(d.scale);
+                    }
+                    d3.select(this).call(renderAxis.scale(d.scale))
+                        .on("click", (d) => {
+                            if (that.neighboor) {
+                                that.neighboor.colorByAxis(d, that.neighboor);
+                            }
+                            if (that.neighboorSc) {
+                                that.neighboorSc.cAxis = d.key;
+                            }
+                            that.colorByAxis(d, that);
+                        });
+                    that.g[i] = d3.select(this.parentNode).call(d3.drag()
+                        .on("start", (d) => {
+                            if (that.neighboor) {
+                                that.neighboor.dragByAxisStart(d, that.neighboor);
+                            }
+                            that.dragByAxisStart(d, that);
+                        })
+                        .on("drag", (d) => {
+                            if (that.neighboor) {
+                                that.neighboor.dragByAxis(d, that.neighboor, i);
+                            }
+                            that.dragByAxis(d, that, i);
+                        })
+                        .on("end", (d) => {
+                            if (that.neighboor) {
+                                that.neighboor.dragByAxisEnd(d, that.neighboor);
+                            }
+                            that.dragByAxisEnd(d, that);
+                        }));
+                })
+                .append("text")
+                .attr("class", "title")
+                .attr("text-anchor", "start")
+                .text(function (d) {
+                    return "description" in d ? d.description : d.key;
+                });
+
+
+            // Add and store a brush for each axis.
+            axes.append("g")
+                .attr("class", "brush")
+                .each(function (d, i) {
+                    d3.select(this).call(d.brush = d3.brushY()
+                        .extent([[-10, 0], [10, height]])
+                        .on("start", brushstart)
+                        .on("brush", brush)
+                        .on("end", brush)
+                    );
+                    // d3.select(this).on("click", () => {
+                    //     d3.select(this).call(zoomsY[i].transform, d3.zoomIdentity);
+                    // });
+                    let zoom = d3.zoom()
+                        .on("zoom", () => zoomed(d3.event, d, i));
+                    // let zoom = d3.zoom()
+                    //     .scaleExtent([1, 64])
+                    //     // .translateExtent([[0, 0], [width, height]])
+                    //     // .extent([[0, 0], [width, height]])
+                    //     .on("zoom", () => zoomed(d3.event, d, i));
+                    d3.select(this).call(zoom);
+                    // d3.select(this).call(d.brush = d3.brushY()
+                    //     .extent([[-10, 0], [10, height]])
+                    //     .on("start", brushstart)
+                    //     .on("brush", brush)
+                    //     .on("end", brush)
+                    // );
+                    // d3.select(this).call(d3.zoom()
+                    // .scaleExtent([1 / zooms_info[i].k, 64])
+                    // .translateExtent([[Math.min(zooms_info[i].x, 0), Math.min(zooms_info[i].y, 0)], [width, height]])
+                    //     .on("zoom", () => zoomed(d3.event, d, i)))
+
+                })
+                .selectAll("rect")
+                .attr("x", -8)
+                .attr("width", 16);
+
+            // axes.each(function (d, i) {
+            //     console.warn(brushes[i])
+            //     d3.select(this).append(brushes[i]);
+            // });
+
+            that.render.invalidate();
+
+
+            that.ctx.clearRect(0, 0, that.width, that.height);
+            that.render(that.data);
+
+            // this.axes = axes;
+            // d3.select(".axis"+index).call(renderAxis.scale(newScale));
+
+        }
     }
+
 
     // [{
     //         "dimension": {
@@ -528,7 +688,7 @@ class ParallelCoords {
 
     selectOnPC(selection) {
         if (!selection[0].extent[0] && !selection[0].extent[1] && !selection[1].extent[0] && !selection[1].extent[1]) {
-            this.showAll(this, this.selected);
+            this.showAll(this, this.selected, false);
         } else {
             let actives = [];
             selection.forEach(el => {
@@ -545,7 +705,7 @@ class ParallelCoords {
         }
     }
 
-    showAll(that, data) {
+    showAll(that, data, self) {
         that.render.invalidate();
 
 
@@ -553,13 +713,28 @@ class ParallelCoords {
         // ctx.globalAlpha = 1;
         that.ctx.globalAlpha = d3.min([0.85 / Math.pow(data.length, 0.3), 1]);
         // TODO - attention quand on fera la selection inverse (2 listes selected ?)
-        // that.selected = data;
-        that.render(data);
+        if (self) {
+            that.selectedSelf = data.slice(0);
+        } else {
+            that.selectedExt = data.slice(0);
+        }
+        let displayed;
+        if (that.neighboorSc) {
+            console.time('testIntersectSelected');
+            let minSelf = that.selectedSelf.length < that.selectedExt.length;
+            displayed = minSelf ?
+                that.selectedSelf.filter(d => that.selectedExt.some(el => ParallelCoords.objectsEquals(d, el)))
+                : that.selectedExt.filter(d => that.selectedSelf.some(el => ParallelCoords.objectsEquals(d, el)));
+            console.timeEnd('testIntersectSelected');
+        } else {
+            displayed = that.selectedSelf
+        }
+        that.render(displayed);
     }
 
-    showSelected(that, data, actives) {
-        console.log(data);
+    showSelected(that, data, actives, self) {
         that.render.invalidate();
+
         let selected = data.filter(function (d) {
             if (actives.every(function (active) {
                     let dim = active.dimension;
@@ -575,7 +750,23 @@ class ParallelCoords {
         that.ctx.globalAlpha = d3.min([0.85 / Math.pow(selected.length, 0.3), 1]);
         // TODO - attention quand on fera la selection inverse (2 listes selected ?)
         // that.selected = selected;
-        that.render(selected);
+        if (self) {
+            that.selectedSelf = selected;
+        } else {
+            that.selectedExt = selected;
+        }
+        let displayed;
+        if (that.neighboorSc) {
+            console.time('testIntersectSelected');
+            let minSelf = that.selectedSelf.length < that.selectedExt.length;
+            displayed = minSelf ?
+                that.selectedSelf.filter(d => that.selectedExt.some(el => ParallelCoords.objectsEquals(d, el)))
+                : that.selectedExt.filter(d => that.selectedSelf.some(el => ParallelCoords.objectsEquals(d, el)));
+            console.timeEnd('testIntersectSelected');
+        } else {
+            displayed = that.selectedSelf
+        }
+        that.render(displayed);
     }
 
     d3_functor(v) {
@@ -585,6 +776,7 @@ class ParallelCoords {
     }
 
     colorByAxis(d, that) {
+        console.log(d);
         that.ctx.clearRect(0, 0, that.width, that.height);
         that.colorAxis = d.key;
         that.color.domain(d3.extent(that.data, function (d) {
@@ -617,7 +809,6 @@ class ParallelCoords {
             return ParallelCoords.position(a.key, that.dragging, that.dimPos) - ParallelCoords.position(b.key, that.dragging, that.dimPos);
         });
         ParallelCoords.updateDimPos(that.dimPos, that.dimensions, that.xscale);
-        console.log(that.g);
         that.g[i].attr("transform", function (d) {
             return "translate(" + xt + ")";
         })
@@ -641,6 +832,16 @@ class ParallelCoords {
         dimensions.forEach(function (d, i) {
             dimPos[d.key] = xscale(i);
         });
+    }
+
+    static objectsEquals(obj1, obj2) {
+        let val = true;
+        for (let prop in obj1) {
+            if(obj1.hasOwnProperty(prop)) {
+                val = val && obj1[prop] === obj2[prop];
+            }
+        }
+        return val;
     }
 }
 

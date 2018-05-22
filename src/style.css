@@ -1,3 +1,7 @@
+body {
+    margin: 0;
+}
+
 /* Style the tab */
 .tab {
     float: left;

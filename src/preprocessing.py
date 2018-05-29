@@ -1,7 +1,6 @@
 import pandas as pd
 import numpy as np
 from sklearn.ensemble import IsolationForest
-import random
 
 df0 = pd.DataFrame()
 df1 = pd.DataFrame()
@@ -52,27 +51,8 @@ def add_selected_files0(data, args):
         cols = d.columns
         cols = cols.map(lambda x: x.replace(' ', '_').replace('.', '') if isinstance(x, (bytes, str)) else x)
         d.columns = cols
-        percentile= 100
-        list_selected_phases=[]
-        # print(args, len(args))
-        if args:
-            #d['group'] = args[0]
-            if len(args)>1 and len(args) <=2:
-                if args[1] != None:
-                    list_selected_phases = args[1]
-                if args[0] != None:
-                    percentile = int(args[0])
         frames = [df0, d]
         df0 = pd.concat(frames).drop_duplicates().reset_index(drop=True)
-
-        if list_selected_phases != []:
-            list_selected_phases = list(map(int, list_selected_phases))
-            df0 = df0.loc[df0['phase_no'].isin(list_selected_phases)]
-
-        # resampling if requested
-        random_resample_list = list(random.sample([i for i in range(len(df0.index))], int(np.trunc(percentile / 100 *len(df0.index)))))
-
-        df0 = df0.iloc[random_resample_list]
 
         variables0["files"] = list(df0["idxFile"].unique())
         variables0["columns"] = list(df0.columns.values)
@@ -96,28 +76,10 @@ def add_selected_files1(data, args):
         cols = d.columns
         cols = cols.map(lambda x: x.replace(' ', '_').replace('.', '') if isinstance(x, (bytes, str)) else x)
         d.columns = cols
-        percentile= 100
-        list_selected_phases=[]
-        # print(args, len(args))
-        if args:
-            # d['group'] = args[0]
-            if len(args)>1 and len(args) <=2:
-                if args[1] != None:
-                    list_selected_phases = args[1]
-                if args[0] != None:
-                    percentile = int(args[0])
         frames = [df1, d]
         df1 = pd.concat(frames).drop_duplicates().reset_index(drop=True)
         # debug_df()
         # print(list(d["idxFile"].unique()))
-        if list_selected_phases != []:
-            list_selected_phases = list(map(int, list_selected_phases))
-            df1 = df1.loc[df1['phase_no'].isin(list_selected_phases)]
-
-        # resampling if requested
-        random_resample_list = list(random.sample([i for i in range(len(df1.index))], int(np.trunc(percentile / 100 *len(df1.index)))))
-
-        df1 = df1.iloc[random_resample_list]
 
         variables1["files"] = list(df1["idxFile"].unique())
         variables1["columns"] = list(df1.columns.values)
@@ -178,24 +140,22 @@ def get_lc_sp_data(data, group, args):
         feature_x = args[0]
         feature_y = args[1]
     else:
-        feature_x = "altitude"
+        feature_x = "n1_1"
         feature_y = "fuel_flow"
     return {"lcspData": create_dict(df[df["idxFile"] == data][["flight_time", feature_x, feature_y]]), "group": group,
             "lcspColumns": [feature_x, feature_y]}
 
 
 def get_lc_sp_generalized_data(data, group, args):
-    df = df0
 
-    if group == 1:
-        print("DataFrame Group 1")
-        df = df1
+    frames = [df0, df1]
+    df = pd.concat(frames).drop_duplicates().reset_index(drop=True)
 
     if args:
         feature_x = args[0]
         feature_y = args[1]
     else:
-        feature_x = "altitude"
+        feature_x = "n1_1"
         feature_y = "fuel_flow"
 
     grouped = df.groupby(by="idxFile", as_index=False) \
@@ -209,28 +169,12 @@ def get_lc_sp_generalized_data(data, group, args):
 
 
 def get_sp_generalized_data(data, group, args):
-    # print(args)
-    contamination = args[0]
-
-    print("CONTAMINATION ", contamination)
     frames = [df0, df1]
     df = pd.concat(frames).drop_duplicates().reset_index(drop=True)
-    cols = df[["idxFile", "date_time", "flight_time"]]
-    df_isolation = df.copy().drop(["idxFile", "date_time", "flight_time"], axis=1)
 
-    X = df_isolation.as_matrix()
-
-    # # fit the model
-    clf = IsolationForest(max_samples=100, contamination=contamination)
-    clf.fit(X)
-    y_pred_train = clf.predict(X)
-
-    df_isolation["anomaly"] = y_pred_train
-    df_isolation[["idxFile", "date_time", "flight_time"]] = cols
-
-    return {"spGeneralizedData": create_dict(df_isolation),
-            "spGeneralizedFiles": list(df_isolation["idxFile"].unique()),
-            "spGeneralizedColumns": list(df_isolation.columns.values)}
+    return {"spGeneralizedData": create_dict(df),
+            "spGeneralizedFiles": list(df["idxFile"].unique()),
+            "spGeneralizedColumns": list(df.columns.values)}
 
 
 # def get_list_files(data, args):

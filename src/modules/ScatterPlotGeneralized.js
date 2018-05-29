@@ -31,6 +31,7 @@ class ScatterPlotGeneralized {
         this.innerHeight = this.height - 2;
         this.step = 5;
         this.pointSize = opts.pointSize;
+        this.rectangle = [];
         this.traits = d3.keys(data[0]);
         let idx1 = this.traits.indexOf("date_time");
         if (idx1 > -1) {
@@ -355,7 +356,9 @@ class ScatterPlotGeneralized {
                 {key: that._xAxis, extent: [xSc.invert(x0), xSc.invert(x1)]},
                 {key: that._yAxis, extent: [ySc.invert(y1), ySc.invert(y0)]}
             ];
-            that.neighboor.selectOnPC(sel);
+            that.rectangle = sel;
+            // that.neighboor.selectOnPC(sel);
+            that.neighboor.drawSelected();
         }
 
         // PC line 407 stop

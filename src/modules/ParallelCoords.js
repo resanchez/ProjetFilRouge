@@ -31,8 +31,17 @@ class ParallelCoords {
         this.width = opts.width - this.margin.left - this.margin.right;
         this.height = opts.height - this.margin.top - this.margin.bottom;
         this.innerHeight = this.height - 2;
+        this.actives = [];
         this.lineWidth = opts.lineWidth;
         this.instantiateSupport();
+    }
+
+    get neighboorSc() {
+        return this._neighboorSc;
+    }
+
+    set neighboorSc(value) {
+        this._neighboorSc = value;
     }
 
     instantiateSupport() {
@@ -339,8 +348,8 @@ class ParallelCoords {
                         if (that.neighboor) {
                             that.neighboor.colorByAxis(d, that.neighboor);
                         }
-                        if (that.neighboorSc) {
-                            that.neighboorSc.cAxis = d.key;
+                        if (that._neighboorSc) {
+                            that._neighboorSc.cAxis = d.key;
                         }
                         that.colorByAxis(d, that);
                     });
@@ -504,269 +513,160 @@ class ParallelCoords {
             }
 
             that.selection = selection;
-            that.showSelected(that, data, actives, true);
-            if (that.neighboorSc) {
-                that.neighboorSc.selectOnSP(selection);
+            that.actives = actives;
+            console.log(selection, actives);
+            // that.showSelected(that, data, actives, true);
+            that.drawSelected();
+            if (that._neighboorSc) {
+                that._neighboorSc.selectOnSP(selection);
             }
         }
         this.dimensions = dimensions;
 
-        function zoomed(e, d, index) {
-            axes.selectAll("*").remove();
-            zooms_info[index].k *= e.transform.k;
-            zooms_info[index].x = e.transform.x;
-            zooms_info[index].y = e.transform.y;
-            // let renderAxis = "axis" in d
-            //     ? d.axis.scale(d.scale)  // custom axis
-            //     : yAxis.scale(d.scale);
-            // TODO: update d.scale ?
-            // axes
-            //     .filter(function (d, i) { return i === index;})
-            //     .call(renderAxis.scale(newScale));
-            // axes.each(function (d, i) {
-            //     let renderAxis = "axis" in d
-            //         ? d.axis.scale(d.scale)  // custom axis
-            //         : yAxis.scale(d.scale);
-            //     let sc = i === index ? e.transform.rescaleY(d.scale) : d.scale;
-            //     d3.select(this).call(renderAxis.scale(sc))
-            // });
-
-            axes.selectAll("*").remove();
-
-            axes.append("g")
-                .each(function (d, i) {
-                    let renderAxis = "axis" in d
-                        ? d.axis.scale(d.scale)  // custom axis
-                        : yAxis.scale(d.scale);
-                    if (i === index) {
-                        d.scale = e.transform.rescaleY(d.scale);
-                    }
-                    d3.select(this).call(renderAxis.scale(d.scale))
-                        .on("click", (d) => {
-                            if (that.neighboor) {
-                                that.neighboor.colorByAxis(d, that.neighboor);
-                            }
-                            if (that.neighboorSc) {
-                                that.neighboorSc.cAxis = d.key;
-                            }
-                            that.colorByAxis(d, that);
-                        });
-                    that.g[i] = d3.select(this.parentNode).call(d3.drag()
-                        .on("start", (d) => {
-                            if (that.neighboor) {
-                                that.neighboor.dragByAxisStart(d, that.neighboor);
-                            }
-                            that.dragByAxisStart(d, that);
-                        })
-                        .on("drag", (d) => {
-                            if (that.neighboor) {
-                                that.neighboor.dragByAxis(d, that.neighboor, i);
-                            }
-                            that.dragByAxis(d, that, i);
-                        })
-                        .on("end", (d) => {
-                            if (that.neighboor) {
-                                that.neighboor.dragByAxisEnd(d, that.neighboor);
-                            }
-                            that.dragByAxisEnd(d, that);
-                        }));
-                })
-                .append("text")
-                .attr("class", "title")
-                .attr("text-anchor", "start")
-                .text(function (d) {
-                    return "description" in d ? d.description : d.key;
-                });
-
-
-            // Add and store a brush for each axis.
-            axes.append("g")
-                .attr("class", "brush")
-                .each(function (d, i) {
-                    d3.select(this).call(d.brush = d3.brushY()
-                        .extent([[-10, 0], [10, height]])
-                        .on("start", brushstart)
-                        .on("brush", brush)
-                        .on("end", brush)
-                    );
-                    // d3.select(this).on("click", () => {
-                    //     d3.select(this).call(zoomsY[i].transform, d3.zoomIdentity);
-                    // });
-                    let zoom = d3.zoom()
-                        .on("zoom", () => zoomed(d3.event, d, i));
-                    // let zoom = d3.zoom()
-                    //     .scaleExtent([1, 64])
-                    //     // .translateExtent([[0, 0], [width, height]])
-                    //     // .extent([[0, 0], [width, height]])
-                    //     .on("zoom", () => zoomed(d3.event, d, i));
-                    d3.select(this).call(zoom);
-                    // d3.select(this).call(d.brush = d3.brushY()
-                    //     .extent([[-10, 0], [10, height]])
-                    //     .on("start", brushstart)
-                    //     .on("brush", brush)
-                    //     .on("end", brush)
-                    // );
-                    // d3.select(this).call(d3.zoom()
-                    // .scaleExtent([1 / zooms_info[i].k, 64])
-                    // .translateExtent([[Math.min(zooms_info[i].x, 0), Math.min(zooms_info[i].y, 0)], [width, height]])
-                    //     .on("zoom", () => zoomed(d3.event, d, i)))
-
-                })
-                .selectAll("rect")
-                .attr("x", -8)
-                .attr("width", 16);
-
-            // axes.each(function (d, i) {
-            //     console.warn(brushes[i])
-            //     d3.select(this).append(brushes[i]);
-            // });
-
-            that.render.invalidate();
-
-
-            that.ctx.clearRect(0, 0, that.width, that.height);
-            that.render(that.data);
-
-            // this.axes = axes;
-            // d3.select(".axis"+index).call(renderAxis.scale(newScale));
-
-        }
+        // function zoomed(e, d, index) {
+        //     axes.selectAll("*").remove();
+        //     zooms_info[index].k *= e.transform.k;
+        //     zooms_info[index].x = e.transform.x;
+        //     zooms_info[index].y = e.transform.y;
+        //     // let renderAxis = "axis" in d
+        //     //     ? d.axis.scale(d.scale)  // custom axis
+        //     //     : yAxis.scale(d.scale);
+        //     // TODO: update d.scale ?
+        //     // axes
+        //     //     .filter(function (d, i) { return i === index;})
+        //     //     .call(renderAxis.scale(newScale));
+        //     // axes.each(function (d, i) {
+        //     //     let renderAxis = "axis" in d
+        //     //         ? d.axis.scale(d.scale)  // custom axis
+        //     //         : yAxis.scale(d.scale);
+        //     //     let sc = i === index ? e.transform.rescaleY(d.scale) : d.scale;
+        //     //     d3.select(this).call(renderAxis.scale(sc))
+        //     // });
+        //
+        //     axes.selectAll("*").remove();
+        //
+        //     axes.append("g")
+        //         .each(function (d, i) {
+        //             let renderAxis = "axis" in d
+        //                 ? d.axis.scale(d.scale)  // custom axis
+        //                 : yAxis.scale(d.scale);
+        //             if (i === index) {
+        //                 d.scale = e.transform.rescaleY(d.scale);
+        //             }
+        //             d3.select(this).call(renderAxis.scale(d.scale))
+        //                 .on("click", (d) => {
+        //                     if (that.neighboor) {
+        //                         that.neighboor.colorByAxis(d, that.neighboor);
+        //                     }
+        //                     if (that._neighboorSc) {
+        //                         that._neighboorSc.cAxis = d.key;
+        //                     }
+        //                     that.colorByAxis(d, that);
+        //                 });
+        //             that.g[i] = d3.select(this.parentNode).call(d3.drag()
+        //                 .on("start", (d) => {
+        //                     if (that.neighboor) {
+        //                         that.neighboor.dragByAxisStart(d, that.neighboor);
+        //                     }
+        //                     that.dragByAxisStart(d, that);
+        //                 })
+        //                 .on("drag", (d) => {
+        //                     if (that.neighboor) {
+        //                         that.neighboor.dragByAxis(d, that.neighboor, i);
+        //                     }
+        //                     that.dragByAxis(d, that, i);
+        //                 })
+        //                 .on("end", (d) => {
+        //                     if (that.neighboor) {
+        //                         that.neighboor.dragByAxisEnd(d, that.neighboor);
+        //                     }
+        //                     that.dragByAxisEnd(d, that);
+        //                 }));
+        //         })
+        //         .append("text")
+        //         .attr("class", "title")
+        //         .attr("text-anchor", "start")
+        //         .text(function (d) {
+        //             return "description" in d ? d.description : d.key;
+        //         });
+        //
+        //
+        //     // Add and store a brush for each axis.
+        //     axes.append("g")
+        //         .attr("class", "brush")
+        //         .each(function (d, i) {
+        //             d3.select(this).call(d.brush = d3.brushY()
+        //                 .extent([[-10, 0], [10, height]])
+        //                 .on("start", brushstart)
+        //                 .on("brush", brush)
+        //                 .on("end", brush)
+        //             );
+        //             // d3.select(this).on("click", () => {
+        //             //     d3.select(this).call(zoomsY[i].transform, d3.zoomIdentity);
+        //             // });
+        //             let zoom = d3.zoom()
+        //                 .on("zoom", () => zoomed(d3.event, d, i));
+        //             // let zoom = d3.zoom()
+        //             //     .scaleExtent([1, 64])
+        //             //     // .translateExtent([[0, 0], [width, height]])
+        //             //     // .extent([[0, 0], [width, height]])
+        //             //     .on("zoom", () => zoomed(d3.event, d, i));
+        //             d3.select(this).call(zoom);
+        //             // d3.select(this).call(d.brush = d3.brushY()
+        //             //     .extent([[-10, 0], [10, height]])
+        //             //     .on("start", brushstart)
+        //             //     .on("brush", brush)
+        //             //     .on("end", brush)
+        //             // );
+        //             // d3.select(this).call(d3.zoom()
+        //             // .scaleExtent([1 / zooms_info[i].k, 64])
+        //             // .translateExtent([[Math.min(zooms_info[i].x, 0), Math.min(zooms_info[i].y, 0)], [width, height]])
+        //             //     .on("zoom", () => zoomed(d3.event, d, i)))
+        //
+        //         })
+        //         .selectAll("rect")
+        //         .attr("x", -8)
+        //         .attr("width", 16);
+        //
+        //     // axes.each(function (d, i) {
+        //     //     console.warn(brushes[i])
+        //     //     d3.select(this).append(brushes[i]);
+        //     // });
+        //
+        //     that.render.invalidate();
+        //
+        //
+        //     that.ctx.clearRect(0, 0, that.width, that.height);
+        //     that.render(that.data);
+        //
+        //     // this.axes = axes;
+        //     // d3.select(".axis"+index).call(renderAxis.scale(newScale));
+        //
+        // }
     }
 
+    drawSelected() {
+        this.render.invalidate();
 
-    // [{
-    //         "dimension": {
-    //             "key": "torque_1",
-    //             "type": {
-    //                 "key": "Number"
-    //             },
-    //             "domain": [
-    //                 1.9,
-    //                 86.6
-    //             ]
-    //         },
-    //         "extent": [
-    //             0,
-    //             20
-    //         ]
-    //     },
-    //     {
-    //         "dimension": {
-    //             "key": "fuel_vol",
-    //             "type": {
-    //                 "key": "Number"
-    //             },
-    //             "domain": [
-    //                 62,
-    //                 285
-    //                 ]
-    //         },
-    //         "extent": [
-    //             36.49717330932617,
-    //             65.4971694946289
-    //             ]
-    //     }];
+        let spSelect = !!(this._neighboorSc
+            && this._neighboorSc.rectangle.length
+            && !(!this._neighboorSc.rectangle[0].extent[0]
+                && !this._neighboorSc.rectangle[0].extent[1]
+                && !this._neighboorSc.rectangle[1].extent[0]
+                && !this._neighboorSc.rectangle[1].extent[1])
+        ) ? this.isInRectangleSp : (d, rect) => true;
 
-    // Doit être de la forme au dessus (en pixel pour l'extent)
+        let pcSelect = this.actives.length ? this.isInSelectionPc : (d, actives) => true;
 
-    // [{
-    //         "key": "ground_speed",
-    //         "extent": [
-    //             128.018578648251,
-    //             179.965528250373
-    //         ]
-    //     },
-    //     {
-    //         "key": "static_pressure",
-    //         "extent": [
-    //             894.9834625859104,
-    //             827.4615482282278
-    //             ]
-    //     }]
-
-    // est de cette forme (en valeur pour l'extent)
-
-    selectOnPC(selection) {
-        if (!selection[0].extent[0] && !selection[0].extent[1] && !selection[1].extent[0] && !selection[1].extent[1]) {
-            this.showAll(this, this.selected, false);
-        } else {
-            let actives = [];
-            selection.forEach(el => {
-                this.dimensions.forEach(dim => {
-                    if (el.key === dim.key) {
-                        let a = {};
-                        a.dimension = dim;
-                        a.extent = [dim.scale(el.extent[1]), dim.scale(el.extent[0])];
-                        actives.push(a);
-                    }
-                });
-            });
-            this.showSelected(this, this.selected, actives);
-        }
-    }
-
-    showAll(that, data, self) {
-        that.render.invalidate();
-
-
-        that.ctx.clearRect(0, 0, that.width, that.height);
-        // ctx.globalAlpha = 1;
-        that.ctx.globalAlpha = d3.min([0.85 / Math.pow(data.length, 0.3), 1]);
-        // TODO - attention quand on fera la selection inverse (2 listes selected ?)
-        if (self) {
-            that.selectedSelf = data.slice(0);
-        } else {
-            that.selectedExt = data.slice(0);
-        }
-        let displayed;
-        if (that.neighboorSc) {
-            console.time('testIntersectSelected');
-            let minSelf = that.selectedSelf.length < that.selectedExt.length;
-            displayed = minSelf ?
-                that.selectedSelf.filter(d => that.selectedExt.some(el => ParallelCoords.objectsEquals(d, el)))
-                : that.selectedExt.filter(d => that.selectedSelf.some(el => ParallelCoords.objectsEquals(d, el)));
-            console.timeEnd('testIntersectSelected');
-        } else {
-            displayed = that.selectedSelf
-        }
-        that.render(displayed);
-    }
-
-    showSelected(that, data, actives, self) {
-        that.render.invalidate();
-
-        let selected = data.filter(function (d) {
-            if (actives.every(function (active) {
-                    let dim = active.dimension;
-                    // test if point is within extents for each active brush
-                    return dim.type.within(d[dim.key], active.extent, dim);
-                })) {
-                return true;
-            }
+        let rect = this._neighboorSc.rectangle;
+        let actives = this.actives;
+        let selected = this.data.filter(d => {
+            return spSelect(d, rect) && pcSelect(d, actives);
         });
-
-        that.ctx.clearRect(0, 0, that.width, that.height);
-        // ctx.globalAlpha = 1;
-        that.ctx.globalAlpha = d3.min([0.85 / Math.pow(selected.length, 0.3), 1]);
-        // TODO - attention quand on fera la selection inverse (2 listes selected ?)
-        // that.selected = selected;
-        if (self) {
-            that.selectedSelf = selected;
-        } else {
-            that.selectedExt = selected;
-        }
-        let displayed;
-        if (that.neighboorSc) {
-            console.time('testIntersectSelected');
-            let minSelf = that.selectedSelf.length < that.selectedExt.length;
-            displayed = minSelf ?
-                that.selectedSelf.filter(d => that.selectedExt.some(el => ParallelCoords.objectsEquals(d, el)))
-                : that.selectedExt.filter(d => that.selectedSelf.some(el => ParallelCoords.objectsEquals(d, el)));
-            console.timeEnd('testIntersectSelected');
-        } else {
-            displayed = that.selectedSelf
-        }
-        that.render(displayed);
+        
+        this.ctx.clearRect(0, 0, this.width, this.height);
+        this.ctx.globalAlpha = d3.min([0.85 / Math.pow(selected.length, 0.3), 1]);
+        this.render(selected);
     }
 
     d3_functor(v) {
@@ -842,6 +742,24 @@ class ParallelCoords {
             }
         }
         return val;
+    }
+
+    isInRectangleSp(d, rect) {
+        let val = true;
+        for (let dim of rect) {
+            val = val && (d[dim.key] >= dim.extent[0] && d[dim.key] <= dim.extent[1]);
+        }
+        return val;
+    }
+
+    isInSelectionPc(d, actives) {
+        if (actives.every(function (active) {
+                let dim = active.dimension;
+                // test if point is within extents for each active brush
+                return dim.type.within(d[dim.key], active.extent, dim);
+            })) {
+            return true;
+        }
     }
 }
 

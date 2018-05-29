@@ -134,7 +134,6 @@ let selectXAxisSPGeneralized = document.getElementById("xAxisSPGeneralized");
 let selectYAxisSPGeneralized = document.getElementById("yAxisSPGeneralized");
 let selectCAxisSPGeneralized = document.getElementById("cAxisSPGeneralized");
 let selectColorScaleSPGeneralized = document.getElementById("colorScaleSPGeneralized");
-let checkboxAnomalySPGeneralized = document.getElementById("checkboxAnomalySPGeneralized");
 let sliderSPGeneralized = document.getElementById("sliderSPGeneralized");
 let valueSPGeneralized = document.getElementById("valueSPGeneralized");
 
@@ -234,20 +233,6 @@ selectColorScaleSPGeneralized.addEventListener("change", function (ev) {
     if (spGeneralized) {
         spGeneralized.colorScale = featureC;
     }
-});
-
-checkboxAnomalySPGeneralized.addEventListener("change", function (ev) {
-    if (spGeneralized) {
-        spGeneralized.showAnomaly = this.checked;
-    }
-});
-
-sliderSPGeneralized.addEventListener("change", function (ev) {
-    sendRequest("getSPGeneralizedData", {}, {}, this.value / 100);
-});
-
-sliderSPGeneralized.addEventListener("input", function (ev) {
-   valueSPGeneralized.innerHTML = "" + Math.round(sliderSPGeneralized.value * 100) / 10000;
 });
 
 // ************************* UPDATE UI FUNCTIONS *************************
@@ -681,71 +666,6 @@ function setUpSPGeneralizedOptions() {
     });
 }
 
-// Get the modal
-let modal = document.getElementById('myModal');
-
-// Get the button that opens the modal
-let btn = document.getElementById("myBtn");
-
-// Get the <span> element that closes the modal
-let span = document.getElementsByClassName("close")[0];
-
-// When the user clicks the button, open the modal
-btn.onclick = function() {
-    modal.style.display = "block";
-}
-
-// When the user clicks on <span> (x), close the modal
-span.onclick = function() {
-    modal.style.display = "none";
-}
-
-// When the user clicks anywhere outside of the modal, close it
-window.onclick = function(event) {
-    if (event.target == modal) {
-        modal.style.display = "none";
-    }
-}
-let phase_selection_0 = document.getElementById("phase_selection0");
-
-let selectedPhases_0;
-phase_selection_0.addEventListener("click", function () {
-    selectedPhases_0 = getSelectedValues(phase_selection_0);
-});
-
-let slider_0 = document.getElementById("myRange0");
-let output_pourcentage_0 = document.getElementById("percentile0");
-output_pourcentage_0.innerHTML = slider_0.value; // Display the default slider value
-
-
-let output_ligne_selec_0 = document.getElementById("nbr_line0");
-
-// Update the current slider value (each time you drag the slider handle)
-slider_0.oninput = function() {
-    output_pourcentage_0.innerHTML = this.value;
-}
-
-
-let phase_selection_1 = document.getElementById("phase_selection1");
-
-let selectedPhases_1;
-phase_selection_1.addEventListener("click", function () {
-    selectedPhases_1 = getSelectedValues(phase_selection_1);
-});
-
-let slider_1 = document.getElementById("myRange1");
-let output_pourcentage_1 = document.getElementById("percentile1");
-output_pourcentage_1.innerHTML = slider_1.value; // Display the default slider value
-
-
-let output_ligne_selec_1 = document.getElementById("nbr_line1");
-
-// Update the current slider value (each time you drag the slider handle)
-slider_1.oninput = function() {
-    output_pourcentage_1.innerHTML = this.value;
-}
-
-
 function readAndSendSelectedFiles(files, id) {
     let dataAll = [];
     let nbFiles = 0;
@@ -770,31 +690,7 @@ function readAndSendSelectedFiles(files, id) {
                     dataAll = dataAll.concat(data);
                     nbFiles++;
                     if (nbFiles === files.length) {
-                        //sendRequest("addSelectedFiles", JSON.stringify(dataAll), id);
-
-
-                        if(id ==0){
-                            output_ligne_selec_0.innerHTML = Math.trunc(slider_0.value * dataAll.length / 100);
-
-                            slider_0.oninput = function() {
-                                output_pourcentage_0.innerHTML = slider_0.value;
-                                output_ligne_selec_0.innerHTML = Math.trunc(slider_0.value * dataAll.length / 100);
-                            }
-
-                            sendRequest("addSelectedFiles", JSON.stringify(dataAll), id, slider_0.value, selectedPhases_0);
-                        }else{
-
-                            output_ligne_selec_1.innerHTML = Math.trunc(slider_1.value * dataAll.length / 100);
-
-                            slider_1.oninput = function() {
-                                output_pourcentage_1.innerHTML = slider_1.value;
-                                output_ligne_selec_1.innerHTML = Math.trunc(slider_1.value * dataAll.length / 100);
-                            }
-
-                            sendRequest("addSelectedFiles", JSON.stringify(dataAll), id, slider_1.value, selectedPhases_1);
-                        }
-                        modal.style.display = "none";
-
+                        sendRequest("addSelectedFiles", JSON.stringify(dataAll), id);
                     }
                 });
             };
@@ -903,7 +799,12 @@ function fillFileList(files, table, key) {
     let tbody = document.createElement("tbody");
     table.appendChild(tbody);
 
-    currentIdx = showMore(files, currentIdx, tbody);
+    console.log(table.getBoundingClientRect(), div.scrollHeight);
+
+    while (table.getBoundingClientRect().height <= div.clientHeight) {
+        currentIdx = showMore(files, currentIdx, tbody);
+    }
+
 }
 
 function searchFiles(fs) {
@@ -1026,7 +927,7 @@ function fillLineChartScatterPlot(data, group, cols) {
 
 // ************************* LINE CHART + SCATTER PLOT GENERALIZED *************************
 function askLCSPGeneralizedDataAll() {
-    askLCSPGeneralizedData(0);
+    askLCSPGeneralizedData();
     // askLCSPGeneralizedData(1);
 }
 
@@ -1048,7 +949,7 @@ function fillLineChartScatterPlotGeneralized(data, group, cols) {
 
 // ************************* SCATTER PLOT GENERALIZED *************************
 function askSPGeneralizedDataAll() {
-    sendRequest("getSPGeneralizedData", {}, {}, sliderSPGeneralized.value / 100);
+    sendRequest("getSPGeneralizedData", {}, {});
     // sendRequest("getSPGeneralizedData", {});
 }
 
@@ -1067,17 +968,17 @@ function fillScatterPlotGeneralized(data, files, columns) {
 
 
     spGeneralized = new ScatterPlotGeneralized("spGeneralizedContainer", data, spFiles, {
-        showAnomaly: checkboxAnomalySPGeneralized.checked
+        colorSelect: selectCAxisSPGeneralized
     });
 
     pcsp = new ParallelCoords("sptableftdown", data, {
         width: 800,
         height: 250,
-        colorAxis: d3.keys(data[0])[2]
+        colorAxis: spGeneralized.cAxis
     });
 
     spGeneralized.neighboor = pcsp;
-    // pcsp.neighboor = spGeneralized;
+    pcsp.neighboorSc = spGeneralized;
 
     selectXAxisSPGeneralized.value = spGeneralized.xAxis;
     selectYAxisSPGeneralized.value = spGeneralized.yAxis;

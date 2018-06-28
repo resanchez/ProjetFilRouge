@@ -2,13 +2,19 @@
 
 
 import sys
+import os
 from twisted.web.static import File
 from twisted.python import log
 from twisted.web.server import Site
 from twisted.internet import reactor
 from autobahn.twisted.websocket import WebSocketServerProtocol
+from autobahn.twisted.websocket import WebSocketServerFactory
+
 import json
 from preprocessing import *
+import glob
+import pandas as pd
+
 # from src.preprocessing import *
 
 functions = {'addSelectedFiles': add_selected_files, 'getLCSPData': get_lc_sp_data,
@@ -49,17 +55,41 @@ def handle_msg(msg):
 
 
 if __name__ == '__main__':
-    import sys
-
     # static file server seving index_old.html as root
     root = File(".")
+    infos = {}
+    folder_path = sys.argv[1]
+    files = glob.glob(folder_path + "/*.csv")
+    df = pd.DataFrame()
+    list = []
+    for f in files:
+        fname = os.path.basename(f)
+        frame = pd.read_csv(f)
+        frame["idxFile"] = fname
+        frame["power"] = frame["power"].fillna(method="ffill")
+        list.append(frame)
+        agg = frame.groupby('phase_no').size().to_dict()
+        infos[fname] = {
+            "nbRows": len(frame),
+            "phasesInfo": agg
+        }
 
-    from twisted.python import log
-    from twisted.internet import reactor
+    df = pd.concat(list)
+    cols = df.columns.map(lambda x: x.replace(' ', '_').replace('.', '') if isinstance(x, (bytes, str)) else x)
+    df.columns = cols
+
+    # Store infos in a json file if needed for debug
+    if sys.argv[2]:
+        with open(sys.argv[2], 'w') as fp:
+            json.dump(infos, fp)
+
+    # cols = d.columns
+    # cols = cols.map(lambda x: x.replace(' ', '_').replace('.', '') if isinstance(x, (bytes, str)) else x)
+    # d.columns = cols
+    # frames = [df0, d]
+    # df0 = pd.concat(frames).drop_duplicates().reset_index(drop=True)
 
     log.startLogging(sys.stdout)
-
-    from autobahn.twisted.websocket import WebSocketServerFactory
 
     factory = WebSocketServerFactory()
     factory.protocol = MyServerProtocol

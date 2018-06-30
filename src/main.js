@@ -719,10 +719,10 @@ slider_0.oninput = function() {
 
 // Update the slider_0 when we change the input of the textbox output_ligne_selec_0
 output_ligne_selec_0.oninput = function() {
-    if(max_lines_by_groups[0] != 0 && this.value < max_lines_by_groups[0]){
-        output_pourcentage_0.innerHTML = Math.trunc(this.value / max_lines_by_groups[0] * 100);
-        slider_0.value = Math.trunc(this.value / max_lines_by_groups[0] * 100);
-    }else if(max_lines_by_groups[0] != 0 && this.value >= max_lines_by_groups[0]){
+    if(count_ligne[0] != 0 && this.value < count_ligne[0]){
+        output_pourcentage_0.innerHTML = Math.trunc(this.value / count_ligne[0] * 100);
+        slider_0.value = Math.trunc(this.value / count_ligne[0] * 100);
+    }else if(count_ligne[0] != 0 && this.value >= count_ligne[0]){
         output_pourcentage_0.innerHTML = 100;
         slider_0.value = 100;
     }else{
@@ -754,10 +754,10 @@ slider_1.oninput = function() {
 
 // Update the slider_1 when we change the input of the textbox output_ligne_selec_1
 output_ligne_selec_1.oninput= function(){
-    if(max_lines_by_groups[1] != 0 && this.value < max_lines_by_groups[1]){
-        output_pourcentage_1.innerHTML = Math.trunc(this.value / max_lines_by_groups[1] * 100);
-        slider_1.value = Math.trunc(this.value / max_lines_by_groups[1] * 100);
-    }else if(max_lines_by_groups[1] != 0 && this.value >= max_lines_by_groups[1]){
+    if(count_ligne[1] != 0 && this.value < count_ligne[1]){
+        output_pourcentage_1.innerHTML = Math.trunc(this.value / count_ligne[1] * 100);
+        slider_1.value = Math.trunc(this.value / count_ligne[1] * 100);
+    }else if(count_ligne[1] != 0 && this.value >= count_ligne[1]){
         output_pourcentage_1.innerHTML = 100;
         slider_1.value = 100;
     }else{

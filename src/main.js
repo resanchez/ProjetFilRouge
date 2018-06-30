@@ -42,6 +42,8 @@ window.addEventListener("load", function () {
             fillLineChartScatterPlotGeneralized(res.data.lcspGeneralizedData, res.data.group, res.data.lcspGeneralizedColumns);
         } else if (res.fct === "getSPGeneralizedData") {
             fillScatterPlotGeneralized(res.data.spGeneralizedData, res.data.spGeneralizedFiles, res.data.spGeneralizedColumns);
+        }else if(res.fct === "countDf"){
+            countLine(res.data.nbr_lines, res.data.group);
         }
     };
 });
@@ -666,6 +668,122 @@ function setUpSPGeneralizedOptions() {
     });
 }
 
+
+// Get the modal
+let modal = document.getElementById('myModal');
+
+// Get the button that opens the modal
+let btn = document.getElementById("myBtn");
+
+// Get the <span> element that closes the modal
+let span = document.getElementsByClassName("close")[0];
+
+// When the user clicks the button, open the modal
+btn.onclick = function() {
+    modal.style.display = "block";
+    // slider_1.value = 100; // At the display of the modal the default slider value should be of 100,
+    // slider_0.value = 100;
+    output_pourcentage_0.innerHTML = slider_0.value;
+    output_pourcentage_1.innerHTML = slider_1.value;
+}
+
+// When the user clicks on <span> (x), close the modal
+span.onclick = function() {
+    modal.style.display = "none";
+}
+
+// When the user clicks anywhere outside of the modal, close it
+window.onclick = function(event) {
+    if (event.target == modal) {
+        modal.style.display = "none";
+    }
+}
+let phase_selection_0 = document.getElementById("phase_selection0");
+
+let selectedPhases_0;
+phase_selection_0.addEventListener("click", function () {
+    selectedPhases_0 = getSelectedValues(phase_selection_0);
+});
+
+let slider_0 = document.getElementById("myRange0");
+let output_pourcentage_0 = document.getElementById("percentile0");
+
+
+
+let output_ligne_selec_0 = document.getElementById("nbr_line0");
+
+// Update the current slider value (each time you drag the slider handle)
+slider_0.oninput = function() {
+    output_pourcentage_0.innerHTML = this.value;
+}
+
+// Update the slider_0 when we change the input of the textbox output_ligne_selec_0
+output_ligne_selec_0.oninput = function() {
+    if(max_lines_by_groups[0] != 0 && this.value < max_lines_by_groups[0]){
+        output_pourcentage_0.innerHTML = Math.trunc(this.value / max_lines_by_groups[0] * 100);
+        slider_0.value = Math.trunc(this.value / max_lines_by_groups[0] * 100);
+    }else if(max_lines_by_groups[0] != 0 && this.value >= max_lines_by_groups[0]){
+        output_pourcentage_0.innerHTML = 100;
+        slider_0.value = 100;
+    }else{
+        output_pourcentage_0.innerHTML = 0;
+        slider_0.value = 0;
+    }
+}
+
+let tot_line_0 = document.getElementById("tot_line_0");
+
+let sameNbrLinesPhaseSelec0 = document.getElementById("sameNbrLinesPhaseSelec0");
+
+let phase_selection_1 = document.getElementById("phase_selection1");
+
+let selectedPhases_1;
+phase_selection_1.addEventListener("click", function () {
+    selectedPhases_1 = getSelectedValues(phase_selection_1);
+});
+
+let slider_1 = document.getElementById("myRange1");
+let output_pourcentage_1 = document.getElementById("percentile1");
+
+let output_ligne_selec_1 = document.getElementById("nbr_line1");
+
+// Update the current slider value (each time you drag the slider handle)
+slider_1.oninput = function() {
+    output_pourcentage_1.innerHTML = this.value;
+}
+
+// Update the slider_1 when we change the input of the textbox output_ligne_selec_1
+output_ligne_selec_1.oninput= function(){
+    if(max_lines_by_groups[1] != 0 && this.value < max_lines_by_groups[1]){
+        output_pourcentage_1.innerHTML = Math.trunc(this.value / max_lines_by_groups[1] * 100);
+        slider_1.value = Math.trunc(this.value / max_lines_by_groups[1] * 100);
+    }else if(max_lines_by_groups[1] != 0 && this.value >= max_lines_by_groups[1]){
+        output_pourcentage_1.innerHTML = 100;
+        slider_1.value = 100;
+    }else{
+        output_pourcentage_1.innerHTML = 0;
+        slider_1.value = 0;
+    }
+}
+let tot_line_1 = document.getElementById("tot_line_1");
+
+let sameNbrLinesPhaseSelec1 = document.getElementById("sameNbrLinesPhaseSelec1");
+
+
+let count_ligne = [0, 0];
+let max_lines_by_groups = [0, 0];
+
+function countLine(nbLines, group){
+    if(parseInt(group) === 0){
+        count_ligne[0] = nbLines;
+        output_ligne_selec_0.value = Math.trunc(slider_0.value * count_ligne[0] / 100);
+    }else{
+        count_ligne[1] = nbLines;
+        output_ligne_selec_1.value = Math.trunc(slider_1.value * count_ligne[1] / 100);
+    }
+}
+
+
 function readAndSendSelectedFiles(files, id) {
     let dataAll = [];
     let nbFiles = 0;
@@ -690,7 +808,43 @@ function readAndSendSelectedFiles(files, id) {
                     dataAll = dataAll.concat(data);
                     nbFiles++;
                     if (nbFiles === files.length) {
-                        sendRequest("addSelectedFiles", JSON.stringify(dataAll), id);
+                        if(id ==0){
+                            max_lines_by_groups[0] = dataAll.length;
+                            tot_line_0.innerHTML = max_lines_by_groups[0];
+                            // sendRequest("addSelectedFiles", JSON.stringify(dataAll), id, slider_0.value, selectedPhases_0);
+                            if( sameNbrLinesPhaseSelec0.checked == true ){
+                                sendRequest("addSelectedFiles", JSON.stringify(dataAll), id, slider_0.value, selectedPhases_0,true);
+                            }else{
+                                sendRequest("addSelectedFiles", JSON.stringify(dataAll), id, slider_0.value, selectedPhases_0,false);
+                            }
+                            sendRequest("countDf", [], id);
+
+                            slider_0.oninput = function() {
+                                output_pourcentage_0.innerHTML = slider_0.value;
+                                output_ligne_selec_0.value = Math.trunc(slider_0.value * count_ligne[0] / 100);
+				console.log(slider_0.value,count_ligne[0], Math.trunc(slider_0.value * count_ligne[0] / 100));
+                            }
+
+                        }else{
+                            max_lines_by_groups[1] = dataAll.length;
+                            tot_line_1.innerHTML = max_lines_by_groups[1];
+                            // sendRequest("addSelectedFiles", JSON.stringify(dataAll), id, slider_1.value, selectedPhases_1);
+                            // console.log(sameNbrLinesPhaseSelec1);
+                            if( sameNbrLinesPhaseSelec1.checked == true){
+                                sendRequest("addSelectedFiles", JSON.stringify(dataAll), id, slider_1.value, selectedPhases_1,true);
+                            }else{
+                                sendRequest("addSelectedFiles", JSON.stringify(dataAll), id, slider_1.value, selectedPhases_1,false);
+                            }
+
+                            sendRequest("countDf", [], id);
+                            slider_1.oninput = function() {
+                                output_pourcentage_1.innerHTML = slider_1.value;
+                                output_ligne_selec_1.value = Math.trunc(slider_1.value * count_ligne[1] / 100);
+                            }
+
+                        }
+                        modal.style.display = "none";
+
                     }
                 });
             };

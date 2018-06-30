@@ -1,9 +1,12 @@
 import pandas as pd
 import numpy as np
 from sklearn.ensemble import IsolationForest
+import random
 
 df0 = pd.DataFrame()
 df1 = pd.DataFrame()
+nbr_line_phase_selection_df0 = 0
+nbr_line_phase_selection_df1 = 0
 variables0 = {"files": [], "columns": [], "group": 0}
 variables1 = {"files": [], "columns": [], "group": 1}
 
@@ -39,8 +42,9 @@ def add_selected_files(data, group, args):
         return add_selected_files1(data, args)
 
 
+
 def add_selected_files0(data, args):
-    global df0
+    global df0, nbr_line_phase_selection_df0
 
     d = pd.read_json(data, orient='records', dtype=dtypes)
     if not (df0.empty and d.empty):
@@ -51,12 +55,48 @@ def add_selected_files0(data, args):
         cols = d.columns
         cols = cols.map(lambda x: x.replace(' ', '_').replace('.', '') if isinstance(x, (bytes, str)) else x)
         d.columns = cols
+        percentile= 100
+        list_selected_phases = []
+        bool_same_nbr_line = False
+        # print(args, len(args))
+        if args:
+            #d['group'] = args[0]
+            if len(args)>1 and len(args) <=3:
+                if args[2] == True:
+                    bool_same_nbr_line = True
+                if args[1] != None:
+                    list_selected_phases = args[1]
+                if args[0] != None:
+                    percentile = int(args[0])
         frames = [df0, d]
         df0 = pd.concat(frames).drop_duplicates().reset_index(drop=True)
 
+        if list_selected_phases != []:
+            list_selected_phases = list(map(int, list_selected_phases))
+            df0 = df0.loc[df0['phase_no'].isin(list_selected_phases)]
+
+        if list_selected_phases != []:
+            list_selected_phases = list(map(int, list_selected_phases))
+            df0 = df0.loc[df0['phase_no'].isin(list_selected_phases)]
+            if bool_same_nbr_line == True:
+                serie_nbr_line = df0.groupby('phase_no').size()
+                # print(serie_nbr_line)
+                min_nbr_line = serie_nbr_line.min()
+                print('min_nbr_line: {}'.format(min_nbr_line))
+                df0 = same_nbr_phase_df(df0, min_nbr_line, list_selected_phases)
+
+
+        # Ajouter le nbre de ligne pour toutes les phases selectionnees
+        nbr_line_phase_selection_df0 = df0.shape[0]
+
+        # resampling if requested
+        random_resample_list = list(random.sample([i for i in range(len(df0.index))], int(np.trunc(percentile / 100 *len(df0.index)))))
+
+        df0 = df0.iloc[random_resample_list]
+
         variables0["files"] = list(df0["idxFile"].unique())
         variables0["columns"] = list(df0.columns.values)
-        # print(df0.dtypes)
+        print("df0:{}".format(df0.shape))
     else:
         variables0["files"] = []
         variables0["columns"] = []
@@ -65,8 +105,7 @@ def add_selected_files0(data, args):
 
 
 def add_selected_files1(data, args):
-    global df1
-
+    global df1, nbr_line_phase_selection_df1
     d = pd.read_json(data, orient='records', dtype=dtypes)
     if not (df1.empty and d.empty):
         # marche pas
@@ -80,16 +119,74 @@ def add_selected_files1(data, args):
         df1 = pd.concat(frames).drop_duplicates().reset_index(drop=True)
         # debug_df()
         # print(list(d["idxFile"].unique()))
+        percentile= 100
+        list_selected_phases = []
+        bool_same_nbr_line = False
+        # print(args, len(args))
+        if args:
+            # d['group'] = args[0]
+            if len(args)>1 and len(args) <=3:
+                if args[2] == True:
+                    bool_same_nbr_line = True
+                if args[1] != None:
+                    list_selected_phases = args[1]
+                if args[0] != None:
+                    percentile = int(args[0])
+        frames = [df1, d]
+        df1 = pd.concat(frames).drop_duplicates().reset_index(drop=True)
+        # debug_df()
+        # print(list(d["idxFile"].unique()))
+        if list_selected_phases != []:
+            list_selected_phases = list(map(int, list_selected_phases))
+            df1 = df1.loc[df1['phase_no'].isin(list_selected_phases)]
+            if bool_same_nbr_line == True:
+                serie_nbr_line = df1.groupby('phase_no').size()
+                # print(serie_nbr_line)
+                min_nbr_line = serie_nbr_line.min()
+                #print('min_nbr_line: {}'.format(min_nbr_line))
+                df1 = same_nbr_phase_df(df1,min_nbr_line,list_selected_phases)
+
+
+        # Ajouter le nbre de ligne pour toutes les phases selectionnees
+        nbr_line_phase_selection_df1 = df1.shape[0]
+
+        # resampling if requested
+        random_resample_list = list(random.sample([i for i in range(len(df1.index))], int(np.trunc(percentile / 100 *len(df1.index)))))
+
+        df1 = df1.iloc[random_resample_list]
+
 
         variables1["files"] = list(df1["idxFile"].unique())
         variables1["columns"] = list(df1.columns.values)
         # print(df1.dtypes)
         # print(list(df1["idxFile"].unique()))
+        print("df1:{}".format(df1.shape))
     else:
         variables1["files"] = []
         variables1["columns"] = []
 
     return variables1
+
+
+def same_nbr_phase_df(df,min_nbr_line,list_selected_phases):
+    list_index = []
+    for i in range(len(list_selected_phases)):
+        print(df[(df['phase_no'] == list_selected_phases[i])].shape[0])
+        # prendre tirer de maniere random les lignes des phases
+        # list_index.append(df[(df['phase_no'] == list_selected_phases[i])].iloc[:min_nbr_line])
+        list_index.append(df[(df['phase_no'] == list_selected_phases[i])].sample(min_nbr_line))
+    df_bis = pd.concat(list_index)
+    return df_bis
+
+
+def count_df(data, group, args):
+    # print(data, group,args)
+    if group == 0:
+        # print("countDf de group {} et de nbr_lines {}".format(group,df0.shape[0]))
+        return {"nbr_lines": nbr_line_phase_selection_df0, "group": 0}
+    else:
+        # print("countDf de group {} et de nbr_lines {}".format(group,df1.shape[0]))
+        return {"nbr_lines": nbr_line_phase_selection_df1, "group": 1}
 
 
 def get_pc_data(data, group, args):

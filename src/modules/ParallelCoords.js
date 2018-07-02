@@ -658,12 +658,15 @@ class ParallelCoords {
 
         let pcSelect = this.actives.length ? this.isInSelectionPc : (d, actives) => true;
 
-        let rect = this._neighboorSc.rectangle;
+        let rect;
+        if (this._neighboorSc) {
+            rect = this._neighboorSc.rectangle;
+        }
         let actives = this.actives;
         let selected = this.data.filter(d => {
             return spSelect(d, rect) && pcSelect(d, actives);
         });
-        
+
         this.ctx.clearRect(0, 0, this.width, this.height);
         this.ctx.globalAlpha = d3.min([0.85 / Math.pow(selected.length, 0.3), 1]);
         this.render(selected);

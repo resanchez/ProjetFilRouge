@@ -19,7 +19,7 @@ import pandas as pd
 
 functions = {'addSelectedFiles': add_selected_files, 'getLCSPData': get_lc_sp_data,
              'getPCData': get_pc_data, 'deleteFile': delete_file, 'getLCSPGeneralizedData': get_lc_sp_generalized_data,
-             'getSPGeneralizedData': get_sp_generalized_data}
+             'getSPGeneralizedData': get_sp_generalized_data, 'buildDF': build_df}
 
 
 class MyServerProtocol(WebSocketServerProtocol):
@@ -28,6 +28,11 @@ class MyServerProtocol(WebSocketServerProtocol):
 
     def onOpen(self):
         print("WebSocket connection open.")
+        msg = {
+            'fct': "initInfos",
+            'data': infos
+        }
+        self.sendMessage(json.dumps(msg).encode('utf8'), False)
 
     def onMessage(self, payload, isBinary):
         if isBinary:
@@ -56,6 +61,7 @@ def handle_msg(msg):
 
 if __name__ == '__main__':
     # static file server seving index_old.html as root
+
     root = File(".")
     infos = {}
     folder_path = sys.argv[1]
@@ -74,9 +80,12 @@ if __name__ == '__main__':
             "phasesInfo": agg
         }
 
-    df = pd.concat(list)
+    df = pd.concat(list, ignore_index=True)
     cols = df.columns.map(lambda x: x.replace(' ', '_').replace('.', '') if isinstance(x, (bytes, str)) else x)
     df.columns = cols
+    print(df.columns)
+    df = df.drop('Unnamed:_0', axis=1)
+    store_df(df)
 
     # Store infos in a json file if needed for debug
     if sys.argv[2]:

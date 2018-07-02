@@ -14,15 +14,23 @@ window.addEventListener("load", function () {
 
     // Find existing selected files
     mySocket.onopen = () => {
-        sendRequest("addSelectedFiles", JSON.stringify([]), 0);
-        sendRequest("addSelectedFiles", JSON.stringify([]), 1);
+        // sendRequest("addSelectedFiles", JSON.stringify([]), 0);
+        // sendRequest("addSelectedFiles", JSON.stringify([]), 1);
     };
     // Ecoute pour les messages arrivant
     mySocket.onmessage = (event) => {
         hideLoading();
+        console.log(event.data)
         let res = JSON.parse(event.data);
-        console.log(res);
-        if (res.fct === "addSelectedFiles") {
+        // console.log(res);
+        if (res.fct === "initInfos") {
+            console.log(res.data);
+            displayInitInfos(res.data)
+        } else if (res.fct === "buildDF"){
+            console.log(res.data);
+            sendRequest("addSelectedFiles", JSON.stringify([]), 0);
+            sendRequest("addSelectedFiles", JSON.stringify([]), 1);
+        } else if (res.fct === "addSelectedFiles") {
             updateUI(res.data);
             updatePCUI(res.data);
             updateGeneralizedUI(res.data);
@@ -45,6 +53,230 @@ window.addEventListener("load", function () {
         }
     };
 });
+
+function displayInitInfos(data) {
+    const files = d3.keys(data);
+    const table = document.getElementById("fileList");
+    const tbody = document.createElement("tbody");
+
+    const tr = document.createElement("tr");
+    const td = document.createElement("td");
+
+    let selected = {group0 : [], group1 : []};
+
+    const ul0 = document.getElementById("selected0");
+    const ul1 = document.getElementById("selected1");
+
+    const span0 = document.getElementById("nbLines0");
+    const span1 = document.getElementById("nbLines1");
+
+    let val0 = 0;
+    let val1 = 0;
+
+    let sel0 = 0;
+    let sel1 = 0;
+
+    const range0 = document.getElementById("range0");
+    const range1 = document.getElementById("range1");
+
+    const sampling0 = document.getElementById("sampling0");
+    const sampling1 = document.getElementById("sampling1");
+
+    const sampled0 = document.getElementById("sampled0");
+    const sampled1 = document.getElementById("sampled1");
+
+    const nbSelected0 = document.getElementById("nbSelected0");
+    const nbSelected1 = document.getElementById("nbSelected1");
+
+    const selectPhase0 = document.getElementById("selectPhase0");
+    const selectPhase1 = document.getElementById("selectPhase1");
+
+    const sendFiles = document.getElementById("sendFiles");
+
+    span0.innerHTML = "" + val0;
+    span1.innerHTML = "" + val1;
+
+    sampling0.innerHTML = range0.value;
+    sampling1.innerHTML = range1.value;
+
+    sampled0.value = "" + Math.ceil(parseFloat(range0.value) * sel0 / 100);
+    sampled1.value = "" + Math.ceil(parseFloat(range1.value) * sel1 / 100);
+
+    nbSelected0.innerHTML = "" + sel0;
+    nbSelected1.innerHTML = "" + sel1;
+
+    let phases0 = [];
+    let phases1 = [];
+
+    for(let el of selectPhase0.selectedOptions) {
+        phases0.push(el.value);
+    }
+
+    for(let el of selectPhase1.selectedOptions) {
+        phases1.push(el.value);
+    }
+
+    for (let f of files) {
+        let tri = tr.cloneNode(false);
+        let tdName = td.cloneNode(false);
+        let tdNbLines = td.cloneNode(false);
+        tdName.className = "nameInfo";
+        tdNbLines.className = "nbLinesInfo";
+        tdName.innerHTML = f;
+        tdNbLines.innerHTML = data[f].nbRows;
+        tri.appendChild(tdName);
+        tri.appendChild(tdNbLines);
+        tri.addEventListener("click", e =>{
+            tri.style.display = "none";
+            let g0 = !e.altKey;
+            let g1 = e.altKey;
+            if (e.shiftKey) {
+                g0 = true;
+                g1 = true;
+            }
+            if (g0) {
+                let li = document.createElement("li");
+                li.innerHTML = f;
+                val0 += data[f].nbRows;
+                span0.innerHTML = "" + val0;
+                selected.group0.push(f);
+                ul0.appendChild(li);
+
+                for(let p of phases0) {
+                    if (data[f].phasesInfo[p]) {
+                        sel0 += data[f].phasesInfo[p];
+                    }
+                }
+
+                nbSelected0.innerHTML = "" + sel0;
+
+                sampled0.value = "" + Math.ceil(parseFloat(range0.value) * sel0 / 100);
+
+                li.addEventListener("click", e => {
+                    ul0.removeChild(li);
+                    selected.group0.splice(selected.group0.indexOf(f), 1);
+                    tri.style.display = "table-row";
+                    val0 -= data[f].nbRows;
+                    span0.innerHTML = "" + val0;
+                    sampled0.value = "" + Math.ceil(parseFloat(range0.value) * sel0 / 100);
+
+                    for(let p of phases0) {
+                        if (data[f].phasesInfo[p]) {
+                            sel0 -= data[f].phasesInfo[p];
+                        }
+                    }
+
+                    nbSelected0.innerHTML = "" + sel0;
+                });
+            }
+            if (g1) {
+                let li = document.createElement("li");
+                li.innerHTML = f;
+                val1 += data[f].nbRows;
+                span1.innerHTML = "" + val1;
+                selected.group1.push(f);
+                ul1.appendChild(li);
+
+                for(let p of phases1) {
+
+                    if (data[f].phasesInfo[p]) {
+                        sel1 += data[f].phasesInfo[p];
+                    }
+                }
+                nbSelected1.innerHTML = "" + sel1;
+
+                sampled1.value = "" + parseFloat(range1.value) * sel1 / 100;
+
+                li.addEventListener("click", e => {
+                    ul1.removeChild(li);
+                    selected.group1.splice(selected.group1.indexOf(f), 1);
+                    tri.style.display = "table-row";
+                    val1 -= data[f].nbRows;
+                    span1.innerHTML = "" + val1;
+                    sampled1.value = "" + Math.ceil(parseFloat(range1.value) * sel1 / 100);
+
+                    for(let p of phases1) {
+                        if (data[f].phasesInfo[p]) {
+                            sel1 -= data[f].phasesInfo[p];
+                        }
+                    }
+
+                    nbSelected1.innerHTML = "" + sel1;
+                })
+            }
+        });
+        tbody.appendChild(tri);
+    }
+
+    range0.addEventListener("input", e => {
+        sampling0.innerHTML = range0.value;
+        sampled0.value = "" + Math.ceil(parseFloat(range0.value) * sel0 / 100);
+    });
+
+    range1.addEventListener("input", e => {
+        sampling1.innerHTML = range1.value;
+        sampled1.value = "" + Math.ceil(parseFloat(range1.value) * sel1 / 100);
+    });
+
+    sampled0.addEventListener("input", e => {
+        range0.value = "" + (parseInt(sampled0.value) / sel0) * 100;
+        sampling0.innerHTML = range0.value;
+    });
+
+    sampled1.addEventListener("input", e => {
+        range1.value = "" + (parseInt(sampled1.value) / sel1) * 100;
+        sampling1.innerHTML = range1.value;
+    });
+
+    selectPhase0.addEventListener("input", e => {
+        phases0 = [];
+        for(let el of selectPhase0.selectedOptions) {
+            phases0.push(el.value);
+        }
+        sel0 = 0;
+        for (let f of selected.group0) {
+            for(let p of phases0) {
+                if (data[f].phasesInfo[p]) {
+                    sel0 += data[f].phasesInfo[p];
+                }
+            }
+        }
+        nbSelected0.innerHTML = "" + sel0;
+        sampled0.value = "" + Math.ceil(parseFloat(range0.value) * sel0 / 100);
+
+    });
+
+    selectPhase1.addEventListener("input", e => {
+        phases1 = [];
+        for(let el of selectPhase1.selectedOptions) {
+            phases1.push(el.value);
+        }
+        sel1 = 0;
+        for (let f of selected.group1) {
+            for(let p of phases1) {
+                if (data[f].phasesInfo[p]) {
+                    sel1 += data[f].phasesInfo[p];
+                }
+            }
+        }
+        nbSelected1.innerHTML = "" + sel1;
+        sampled1.value = "" + Math.ceil(parseFloat(range1.value) * sel1 / 100);
+    });
+
+    table.appendChild(tbody);
+
+    sendFiles.addEventListener("click", e => {
+        console.log("send files");
+        sendRequest("buildDF", {
+            filesGroup0 : selected.group0,
+            filesGroup1 : selected.group1,
+            phaseGroup0 : phases0,
+            phaseGroup1 : phases1,
+            nbGroup0 : sampled0.value,
+            nbGroup1 : sampled1.value
+        })
+    });
+}
 
 let loadingDiv = document.getElementById("loaderDiv");
 let btnHideLoading = document.getElementById("hideLoading");
@@ -114,7 +346,7 @@ let state = {
 
 // ************************* VARIABLES SELECTION *************************
 
-let selectedFilesList = document.getElementById("selectedFiles");
+// let selectedFilesList = document.getElementById("selectedFiles");
 
 // let btnDisplayPC0 = document.getElementById("displayPC0");
 // let btnDisplayPC1 = document.getElementById("displayPC1");
@@ -279,16 +511,16 @@ function updateUI(data) {
     let xAxisLCSPValue = selectXAxisLCSP.value;
     let yAxisLCSPValue = selectYAxisLCSP.value;
 
-    let addedFilesList = document.getElementById("addedFiles" + data.group);
-    addedFilesList.innerHTML = "";
-    selectedFilesList.innerHTML = "";
+    // let addedFilesList = document.getElementById("addedFiles" + data.group);
+    // addedFilesList.innerHTML = "";
+    // selectedFilesList.innerHTML = "";
     selectFileLCSP.innerHTML = "";
     selectXAxisLCSP.innerHTML = "";
     selectYAxisLCSP.innerHTML = "";
     for (let f of state[data.group].files) {
         let li = document.createElement("li");
-        li.className = "addedFile";
-        li.innerHTML = `<span>${f} </span>`;
+        // li.className = "addedFile";
+        // li.innerHTML = `<span>${f} </span>`;
         let del = document.createElement("div");
         del.className = "deleteFile";
         del.innerHTML = "X";
@@ -323,7 +555,7 @@ function updateUI(data) {
             // let liToRM = filesToLi[f];
             // displaySelectedFiles.removeChild(liToRM);
         });
-        addedFilesList.appendChild(li);
+        // addedFilesList.appendChild(li);
 
         let option = document.createElement("option");
         option.innerHTML = f;
@@ -486,7 +718,7 @@ let listFilesIdx = [];
 
 function main() {
     setupTabs();
-    setupListeners();
+    // setupListeners();
     setUpPCOptions();
     setUpOptions();
     setUpGeneralizedOptions();
@@ -557,61 +789,61 @@ let orders = {
     },
 };
 
-function setupListeners() {
-    let importFolder = document.getElementById("import");
-    let table = document.getElementById("fileList");
-    displaySelectedFiles = document.getElementById("selectedFiles");
-    displayAddedFiles = document.getElementById("addedFiles");
-    let addSelectedFiles = document.getElementById("addSelectedFiles");
-
-    // ORDERING VARIABLES
-    let name = document.getElementById("name");
-    let type = document.getElementById("type");
-    let size = document.getElementById("size");
-    let lastModifiedDate = document.getElementById("lastModifiedDate");
-
-    let fs = [];
-
-    importFolder.addEventListener("change", function (ev) {
-        let files = ev.path[0].files;
-        for (let f of files) {
-            fs.push(f);
-        }
-        fillFileList(fs, table, "name");
-    });
-
-    // Order by name
-    name.addEventListener("click", function (ev) {
-        orders.name.order *= -1;
-        fillFileList(fs, table, "name");
-    });
-
-    // Order by file type
-    type.addEventListener("click", function (ev) {
-        orders.type.order *= -1;
-        fillFileList(fs, table, "type");
-    });
-
-    // Order by size
-    size.addEventListener("click", function (ev) {
-        orders.size.order *= -1;
-        fillFileList(fs, table, "size");
-    });
-
-    // Order by last modified date
-    lastModifiedDate.addEventListener("click", function (ev) {
-        orders.lastModifiedDate.order *= -1;
-        fillFileList(fs, table, "lastModifiedDate");
-    });
-
-    addSelectedFiles.addEventListener("click", function (ev) {
-        readAndSendSelectedFiles(listSelectedFiles1, 0);
-        readAndSendSelectedFiles(listSelectedFiles2, 1);
-    });
-
-    // SEARCH FILES
-    searchFiles(fs);
-}
+// function setupListeners() {
+//     let importFolder = document.getElementById("import");
+//     let table = document.getElementById("fileList");
+//     displaySelectedFiles = document.getElementById("selectedFiles");
+//     displayAddedFiles = document.getElementById("addedFiles");
+//     let addSelectedFiles = document.getElementById("addSelectedFiles");
+//
+//     // ORDERING VARIABLES
+//     let name = document.getElementById("name");
+//     let type = document.getElementById("type");
+//     let size = document.getElementById("size");
+//     let lastModifiedDate = document.getElementById("lastModifiedDate");
+//
+//     let fs = [];
+//
+//     importFolder.addEventListener("change", function (ev) {
+//         let files = ev.path[0].files;
+//         for (let f of files) {
+//             fs.push(f);
+//         }
+//         fillFileList(fs, table, "name");
+//     });
+//
+//     // Order by name
+//     name.addEventListener("click", function (ev) {
+//         orders.name.order *= -1;
+//         fillFileList(fs, table, "name");
+//     });
+//
+//     // Order by file type
+//     type.addEventListener("click", function (ev) {
+//         orders.type.order *= -1;
+//         fillFileList(fs, table, "type");
+//     });
+//
+//     // Order by size
+//     size.addEventListener("click", function (ev) {
+//         orders.size.order *= -1;
+//         fillFileList(fs, table, "size");
+//     });
+//
+//     // Order by last modified date
+//     lastModifiedDate.addEventListener("click", function (ev) {
+//         orders.lastModifiedDate.order *= -1;
+//         fillFileList(fs, table, "lastModifiedDate");
+//     });
+//
+//     addSelectedFiles.addEventListener("click", function (ev) {
+//         readAndSendSelectedFiles(listSelectedFiles1, 0);
+//         readAndSendSelectedFiles(listSelectedFiles2, 1);
+//     });
+//
+//     // SEARCH FILES
+//     searchFiles(fs);
+// }
 
 function setUpPCOptions() {
     let sideNav = document.getElementById("openSideNavPC");

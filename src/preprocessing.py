@@ -4,6 +4,7 @@ from sklearn.ensemble import IsolationForest
 
 df0 = pd.DataFrame()
 df1 = pd.DataFrame()
+df = pd.DataFrame()
 variables0 = {"files": [], "columns": [], "group": 0}
 variables1 = {"files": [], "columns": [], "group": 1}
 
@@ -31,7 +32,36 @@ dtypes = {
 }
 
 
+def store_df(df_all):
+    global df
+    df = df_all
+
+
+def build_df(data, group, args):
+    """
+    Build filtered DataFrames corresponding to the correct group, phase number
+    :param data: a dictionary that contains information sent by the client we need to filter
+    :param group:
+    :param args:
+    :return:
+    """
+    global df0
+    global df1
+
+    df0 = df[(df["idxFile"].isin(data["filesGroup0"])) & (df["phase_no"].isin(data["phaseGroup0"]))].sample(int(data["nbGroup0"])).sort_values(by=['idxFile', 'flight_time'])
+    df1 = df[(df["idxFile"].isin(data["filesGroup1"])) & (df["phase_no"].isin(data["phaseGroup1"]))].sample(int(data["nbGroup1"])).sort_values(by=['idxFile', 'flight_time'])
+
+    return "ok"
+
+
 def add_selected_files(data, group, args):
+    """
+    Add selected files given a group
+    :param data:
+    :param group:
+    :param args:
+    :return:
+    """
     print(group)
     if group == 0:
         return add_selected_files0(data, args)

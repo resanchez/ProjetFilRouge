@@ -30,29 +30,72 @@
                     <thead>
                     <tr>
                         <td id="name">Name</td>
-                        <td id="type">Type</td>
-                        <td id="size">Size</td>
-                        <td id="lastModifiedDate">Last modified date</td>
+                        <td id="nbLines">Number of lines</td>
                     </tr>
                     </thead>
                 </table>
             </div>
             <div id="rightPane">
                 <div class="fixedDiv">
-                    <button id="addSelectedFiles">Add Selected Files</button>
-                    <div style="height: 300px">
-                        Selected Files :
-                        <ul id="selectedFiles">
-                        </ul>
-                    </div>
-                    <div style="height: 300px">
-                        Added Files :
-                        <ul id="addedFiles0">
-                        </ul>
+                    <!--<button id="addSelectedFiles">Add Selected Files</button>-->
+                    <!--<div style="height: 300px">-->
+                        <!--Selected Files :-->
+                        <!--<ul id="selectedFiles">-->
+                        <!--</ul>-->
+                    <!--</div>-->
+                    <!--<div style="height: 300px">-->
+                        <!--Added Files :-->
+                        <!--<ul id="addedFiles0">-->
+                        <!--</ul>-->
 
-                        <ul id="addedFiles1">
-                        </ul>
-                    </div>
+                        <!--<ul id="addedFiles1">-->
+                        <!--</ul>-->
+                    <!--</div>-->
+                    <ul id="selected0">
+                    </ul>
+
+                    <ul id="selected1">
+                    </ul>
+
+                    <!--<p><span id="sampled0"></span> / <span id="nbLines0"></span> lines in Group 1</p>-->
+                    <!--<p><span id="sampled1"></span> / <span id="nbLines1"></span> lines in Group 2</p>-->
+
+                    <p><input type="number" id="sampled0"> / <span id="nbSelected0"></span> / <span id="nbLines0"></span> lines in Group 1</p>
+                    <p><input type="number" id="sampled1"> / <span id="nbSelected1"></span> / <span id="nbLines1"></span> lines in Group 1</p>
+
+                    <input type="range" id="range0" min="0" max="100" value="100" step="0.1">
+                    <label for="range0"><span id="sampling0"></span>%</label> <br/>
+                    <input type="range" id="range1" min="0" max="100" value="100" step="0.1">
+                    <label for="range1"><span id="sampling1"></span>%</label> <br/>
+
+                    <select multiple id="selectPhase0">
+                        <option selected value="-1">-1</option>
+                        <option selected value="1">1</option>
+                        <option selected value="2">2</option>
+                        <option selected value="3">3</option>
+                        <option selected value="4">4</option>
+                        <option selected value="5">5</option>
+                        <option selected value="6">6</option>
+                        <option selected value="7">7</option>
+                        <option selected value="8">8</option>
+                        <option selected value="9">9</option>
+                        <option selected value="10">10</option>
+                    </select><br/>
+                    <select multiple id="selectPhase1">
+                        <option selected value="-1">-1</option>
+                        <option selected value="1">1</option>
+                        <option selected value="2">2</option>
+                        <option selected value="3">3</option>
+                        <option selected value="4">4</option>
+                        <option selected value="5">5</option>
+                        <option selected value="6">6</option>
+                        <option selected value="7">7</option>
+                        <option selected value="8">8</option>
+                        <option selected value="9">9</option>
+                        <option selected value="10">10</option>
+                    </select><br/>
+
+                    <button id="sendFiles">Send selected files</button>
                 </div>
             </div>
         </div>

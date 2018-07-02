@@ -20,11 +20,9 @@ window.addEventListener("load", function () {
     // Ecoute pour les messages arrivant
     mySocket.onmessage = (event) => {
         hideLoading();
-        console.log(event.data)
         let res = JSON.parse(event.data);
         // console.log(res);
         if (res.fct === "initInfos") {
-            console.log(res.data);
             displayInitInfos(res.data)
         } else if (res.fct === "buildDF"){
             console.log(res.data);
@@ -158,13 +156,12 @@ function displayInitInfos(data) {
                     tri.style.display = "table-row";
                     val0 -= data[f].nbRows;
                     span0.innerHTML = "" + val0;
-                    sampled0.value = "" + Math.ceil(parseFloat(range0.value) * sel0 / 100);
-
                     for(let p of phases0) {
                         if (data[f].phasesInfo[p]) {
                             sel0 -= data[f].phasesInfo[p];
                         }
                     }
+                    sampled0.value = "" + Math.ceil(parseFloat(range0.value) * sel0 / 100);
 
                     nbSelected0.innerHTML = "" + sel0;
                 });
@@ -193,13 +190,12 @@ function displayInitInfos(data) {
                     tri.style.display = "table-row";
                     val1 -= data[f].nbRows;
                     span1.innerHTML = "" + val1;
-                    sampled1.value = "" + Math.ceil(parseFloat(range1.value) * sel1 / 100);
-
                     for(let p of phases1) {
                         if (data[f].phasesInfo[p]) {
                             sel1 -= data[f].phasesInfo[p];
                         }
                     }
+                    sampled1.value = "" + Math.ceil(parseFloat(range1.value) * sel1 / 100);
 
                     nbSelected1.innerHTML = "" + sel1;
                 })
